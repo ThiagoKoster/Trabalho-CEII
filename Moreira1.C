@@ -29,7 +29,7 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 #define MAX_NOS 50
 #define TOLG 1e-9
 #define DEBUG
-#define FATORDC 10e9
+#define FATORDC 10e12
 #define FATORAC bla
 
 typedef struct elemento { /* Definição de Elemento */
@@ -410,7 +410,7 @@ int main(void)
   printf("Sistema resolvido:\n");
   for (i=1; i<=nv; i++) {
       for (j=1; j<=nv+1; j++){
-      	if ((Yn[i][j] >= -0.000000001) && (Yn[i][j] <= 0.000000001)) {
+      	if ((Yn[i][j] >= -1/FATORDC*1000) && (Yn[i][j] <= 1/FATORDC*1000)) {
 		  Yn[i][j] *= 0;
 		}
         if (Yn[i][j]!=0) {
@@ -434,3 +434,4 @@ int main(void)
   getch();
   return 0;
 }
+
