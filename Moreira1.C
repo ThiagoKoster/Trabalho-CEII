@@ -35,8 +35,8 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
   double valor;
-  int a,b,c,d, e,f,g,h,i,j,k,l,m,x,y;
-  char nomeA[MAX_NOME], nomeB[MAX_NOME];
+  int a,b,c,d,L,W,K,VT,LAMBDA,GAMMA,TETHA,LD,x,y;
+  char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
 } elemento;
 
 elemento netlist[MAX_ELEM]; /* Lista de Elementos -> Netlist */
@@ -53,7 +53,7 @@ char
   nomearquivo[MAX_LINHA+1],
   tipo, 
   na[MAX_NOME],nb[MAX_NOME],nc[MAX_NOME],nd[MAX_NOME],
-  nee[MAX_NOME],nef[MAX_NOME],neg[MAX_NOME],neh[MAX_NOME],nei[MAX_NOME],nej[MAX_NOME],nek[MAX_NOME],nel[MAX_NOME],nem[MAX_NOME], //Variáveis extras para o transistor
+  nNPMOS[MAX_NOME],nL[MAX_NOME],nW[MAX_NOME],nK[MAX_NOME],nVT[MAX_NOME],nLAMBDA[MAX_NOME],nGAMMA[MAX_NOME],nTETHA[MAX_NOME],nLD[MAX_NOME], //Variáveis extras para o transistor
   lista[MAX_NOS+1][MAX_NOME+2], /*Tem que caber jx antes do nome */
   txt[MAX_LINHA+1],
   *p;
@@ -185,21 +185,23 @@ int main(void)
       netlist[ne].d=numero(nd);
     }
 	else if (tipo=='M'){
-	  sscanf(p,"%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s",na,nb,nc,nd,nee,nef,neg,neh,nei,nej,nek,nel,nem);
-      printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",netlist[ne].nome,na,nb,nc,nd,nee,nef,neg,neh,nei,nej,nek,nel,nem);
+	  sscanf(p,"%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s",na,nb,nc,nd,nNPMOS,nL,nW,nK,nVT,nLAMBDA,nGAMMA,nTETHA,nLD);
+      printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",netlist[ne].nome,na,nb,nc,nd,nNPMOS,nL,nW,nK,nVT,nLAMBDA,nGAMMA,nTETHA,nLD);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
       netlist[ne].c=numero(nc);
       netlist[ne].d=numero(nd);
-      netlist[ne].e=numero(nee);
-      netlist[ne].f=numero(nef);
-      netlist[ne].g=numero(neg);
-      netlist[ne].h=numero(neh);
-      netlist[ne].i=numero(nei);
-      netlist[ne].j=numero(nej);
-      netlist[ne].k=numero(nek);
-      netlist[ne].l=numero(nel);
-      netlist[ne].m=numero(nem);
+      for (int count = 0; count < MAX_NOME; count++){
+      	netlist[ne].NPMOS[count]=nNPMOS[count];	
+	  }
+      netlist[ne].L=numero(nL);
+      netlist[ne].W=numero(nW);
+      netlist[ne].K=numero(nK);
+      netlist[ne].VT=numero(nVT);
+      netlist[ne].LAMBDA=numero(nLAMBDA);
+      netlist[ne].GAMMA=numero(nGAMMA);
+      netlist[ne].TETHA=numero(nTETHA);
+      netlist[ne].LD=numero(nLD);
 	}
     else if (tipo=='*') { /* Comentario comeca com "*" */
       printf("Comentario: %s",txt);
@@ -311,7 +313,6 @@ int main(void)
     		break;
 		}
 	  }
-      
 
     }
     else if (tipo=='C') {
