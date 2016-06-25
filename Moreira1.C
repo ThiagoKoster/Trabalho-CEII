@@ -30,7 +30,11 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 #define TOLG 1e-9
 #define DEBUG
 #define FATORDC 10e9
-#define FATORAC bla
+#define MAX_ERRO 10e-9			//valor maximo de erro para iteracoes
+#define MAX_ITER 50 			//maximo de iteracoes
+#define REF_VAL 1 				//valor de referencia utilizado nos calculos de convergencias
+#define MIN_ITER_CONV 2 		//numero minimo de iteracoes para considerar como estavel a solucao
+#define TRY_CONV 5 				//o numero de tentativas que o algoritmo faz para calcular uma solucao, mesmo nao convergindo
 
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
@@ -123,6 +127,79 @@ int numero(char *nome)
     return i; /* no ja conhecido */
   }
 }
+
+void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
+{
+	double max_err = 0;
+	double tmp_err;
+	if (iteracoes < MAX_ITER)
+	{
+		for (int counter_var = 0; counter_var <= nv; cont++)
+		{
+			//tmp_err = discrepância relativa
+			if (fabs(vProximo[counter_var]) > REF_VAL)
+				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
+
+			//tmp_err = discrepância absoluta
+			if (vProximo[counter_var] < REF_VAL)
+				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
+
+			//atuliza max_err caso tmp_err seja maior
+			if (tmp_err > max_err)
+				max_err = tmp_err;
+        }
+
+		//faz com o que as tensoes futuras sejam as atuais
+		for (int counter_var = 0; counter_var <= nv; counter_var++)
+			vAtual[counter_var] = vProximo[counter_var];
+
+		//exibe o erro atual entre o nó atual e o nó futuro
+		printf("\nErro atual: %.10f\n", max_err);
+		
+		// se convergir, mantem-se o modelo do transistor e incrementa-se o contador da quantidade de vezes que o algoritmo convergiu
+		if (max_err <= MAX_ERRO)
+		{
+			correct_model = true;
+			count_conv++;
+		}
+		
+		// senao, incrementa-se o contador da quantidade de vezes que o algoritmo NAO convergiu
+		else if (max_err >= MAX_ERRO)
+			count_NOT_conv++;
+		
+		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
+		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
+		{
+			correct_model = false;
+			count_conv = 0;
+			iteracoes = 0;
+		}
+
+		// caso "count_conv" supere MIN_ITER_CONV (quantidade minima de iteracoes de convergencias corretas), confirma-se que o modelo converge 
+		if (count_conv >= MIN_ITER_CONV)
+		{
+			convergiu = true;
+			printf("Convergiu \n");
+		}
+		
+		if (correct_model)
+			iteracoes++;
+		
+		return;
+	}
+	
+	// se "iteracoes" superar MAX_ITER (quantidade maxima de iteracoes que a funcao controleConvergencia pode realizar), assume-se modelo incorreto e zera-se os contadores de iteracao
+	else if (iteracoes >= MAX_ITER)
+	{
+		correct_model = false;
+		count_conv = 0;
+		iteracoes = 0;
+		
+		return;
+	}
+	 
+}
+
 
 int main(void)
 {
