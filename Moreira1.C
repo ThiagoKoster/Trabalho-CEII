@@ -36,6 +36,7 @@ typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
   double valor;
   int a,b,c,d, e,f,g,h,i,j,k,l,m,x,y;
+  char nomeA[MAX_NOME], nomeB[MAX_NOME];
 } elemento;
 
 elemento netlist[MAX_ELEM]; /* Lista de Elementos -> Netlist */
@@ -152,11 +153,20 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='I' || tipo=='V' || tipo=='L' || tipo=='C' || tipo=='K') {
+    if (tipo=='R' || tipo=='I' || tipo=='V' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
+    }
+    else if (tipo=='K') {
+      sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
+      printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
+      
+      for(int count = 0; count < MAX_NOME; count++){
+    	netlist[ne].nomeA[count]=na[count];
+      	netlist[ne].nomeB[count]=nb[count];
+	  }
     }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
@@ -209,7 +219,7 @@ int main(void)
   nn=nv;
   for (i=1; i<=ne; i++) {
     tipo=netlist[i].nome[0];
-    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O') {
+    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O' || tipo=='K') {
       nv++;
       if (nv>MAX_NOS) {
         printf("As correntes extra excederam o numero de variaveis permitido (%d)\n",MAX_NOS);
@@ -273,14 +283,39 @@ int main(void)
       Yn[netlist[i].a][netlist[i].b]-=g;
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
-    if (tipo=='C') {
+    else if (tipo=='K') {
+      g=netlist[i].valor;
+      
+      for (int count1 = 1; count1 <= ne; count1++){
+    	if (netlist[i].nomeA == netlist[count1].nome){
+    		Yn[netlist[i].x][netlist[count1].a]+=g;
+      		Yn[netlist[i].x][netlist[count1].b]-=g;
+    		Yn[netlist[count1].x][netlist[i].x]-=g;
+      		Yn[netlist[count1].x][netlist[i].x]+=g;
+    		break;
+		}
+	  }
+	  
+	for (int count2 = 1; count2 <= ne; count2++){
+    	if (netlist[i].nomeB == netlist[count2].nome){
+			Yn[netlist[i].x][netlist[count2].a]-=1;
+			Yn[netlist[i].x][netlist[count2].b]+=1;
+			Yn[netlist[count2].x][netlist[i].x]+=1;
+		    Yn[netlist[count2].x][netlist[i].x]-=1;
+    		break;
+		}
+	  }
+      
+
+    }
+    else if (tipo=='C') {
       g=netlist[i].valor / FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
       Yn[netlist[i].a][netlist[i].b]-=g;
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
-    if (tipo=='L') {
+    else if (tipo=='L') {
       g=netlist[i].valor * FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
