@@ -29,6 +29,7 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 #define MAX_NOS 50
 #define TOLG 1e-9
 #define DEBUG
+#define FATORDC 10e9
 
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
@@ -272,14 +273,14 @@ int main(void)
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
     if (tipo=='C') {
-      g=0.000000000001;
+      g=netlist[i].valor / FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
       Yn[netlist[i].a][netlist[i].b]-=g;
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
     if (tipo=='L') {
-      g=999999999999;
+      g=netlist[i].valor * FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
       Yn[netlist[i].a][netlist[i].b]-=g;
