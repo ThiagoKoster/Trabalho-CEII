@@ -35,7 +35,8 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
   double valor;
-  int a,b,c,d,L,W,K,VT,LAMBDA,GAMMA,TETHA,LD,x,y;
+  int a,b,c,d,x,y;
+  float L,W,K,VT,LAMBDA,GAMMA,TETHA,LD;
   char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
 } elemento;
 
@@ -167,6 +168,7 @@ int main(void)
     	netlist[ne].nomeA[count]=na[count];
       	netlist[ne].nomeB[count]=nb[count];
 	  }
+	  
     }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
@@ -194,14 +196,14 @@ int main(void)
       for (int count = 0; count < MAX_NOME; count++){
       	netlist[ne].NPMOS[count]=nNPMOS[count];	
 	  }
-      netlist[ne].L=numero(nL);
-      netlist[ne].W=numero(nW);
-      netlist[ne].K=numero(nK);
-      netlist[ne].VT=numero(nVT);
-      netlist[ne].LAMBDA=numero(nLAMBDA);
-      netlist[ne].GAMMA=numero(nGAMMA);
-      netlist[ne].TETHA=numero(nTETHA);
-      netlist[ne].LD=numero(nLD);
+      netlist[ne].L=strtof(nL, NULL);
+      netlist[ne].W=strtof(nW, NULL);
+      netlist[ne].K=strtof(nK, NULL);
+      netlist[ne].VT=strtof(nVT, NULL);
+      netlist[ne].LAMBDA=strtof(nLAMBDA, NULL);
+      netlist[ne].GAMMA=strtof(nGAMMA, NULL);
+      netlist[ne].TETHA=strtof(nTETHA, NULL);
+      netlist[ne].LD=strtof(nLD, NULL);
 	}
     else if (tipo=='*') { /* Comentario comeca com "*" */
       printf("Comentario: %s",txt);
