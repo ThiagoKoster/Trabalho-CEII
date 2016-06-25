@@ -30,6 +30,7 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 #define TOLG 1e-9
 #define DEBUG
 #define FATORDC 10e9
+#define FATORAC bla
 
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
