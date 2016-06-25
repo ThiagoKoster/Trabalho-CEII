@@ -305,7 +305,6 @@ int main(void)
     		break;
 		}
 	  }
-      
 
     }
     else if (tipo=='C') {
