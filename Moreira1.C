@@ -35,12 +35,16 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
   double valor;
-  int a,b,c,d,x,y;
+  int a,b,c,d,x,y,tD,tG,tS,tB;
   float L,W,K,VT,LAMBDA,GAMMA,TETHA,LD;
   char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
 } elemento;
 
 elemento netlist[MAX_ELEM]; /* Lista de Elementos -> Netlist */
+
+enum pontoOperacao{
+	corte, triodo, saturacao
+};
 
 int
   ne, /* Número de Elementos */
@@ -62,7 +66,13 @@ FILE *arquivo;
 
 double
   g,
+  gm,    //
+  gDS,  // // Variaveis para o transistor.
+  iO,  //
   Yn[MAX_NOS+1][MAX_NOS+2];
+  
+  pontoOperacao operacaoTransistorAtual [MAX_NOS +1];
+  pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
 
 /* Resolucao de sistema de equacoes lineares.
    Metodo de Gauss-Jordan com condensacao pivotal */
@@ -284,6 +294,7 @@ int main(void)
       Yn[i][j]=0;
   }
   /* Monta estampas */
+  int numMOS = 0;
   for (i=1; i<=ne; i++) {
     tipo=netlist[i].nome[0];
     if (tipo=='R') {
@@ -380,12 +391,99 @@ int main(void)
       Yn[netlist[i].x][netlist[i].d]+=1;
       Yn[netlist[i].y][netlist[i].x]+=g;
     }
+    else if (tipo=='M'){
+    	g = ((double) 5.0) / FATORDC;
+    	gm = 0;
+    	gDS = 0;
+    	iO = 0;
+    	printf("vd %f vs %f\n", vAtual[netlist[i].tD],vAtual[netlist[i].tS]);
+    	if(vAtual[netlist[i].tD] < vAtual[netlist[i].tS])
+    	{
+    		printf("Tensao no Drain > Tensao no Source\n");
+    		int aux = netlist[i].tD;
+    		netlist[i].tD = netlist[i].tS;
+    		netlist[i].tS = aux;
+		}
+		double vGS = vAtual[netlist[i].tG] - vAtual[netlist[i].tS];
+		double vDS = vAtual[netlist[i].tD] - vAtual[netlist[i].tS];
+		double v_t = netlist[i].VT + netlist[i].GAMMA * (sqrt(fabs(netlist[i].TETHA - (vAtual[netlist[i].tB] -vAtual[netlist[i].tS]))) - sqrt(fabs(netlist[i].TETHA)));
+		printf ("v_t: %f  vGS: %f vDS: %f vS: %f tS %d\n", v_t,vGS,vDS, vAtual[netlist[i].tS], netlist[i].tS);
+		if (vGS < v_t)
+          {
+               operacaoTransistorAtual [numMOS] = corte;
+               printf ("Modo de operacao: corte\n");
+          }
+        else if (vDS < vGS - v_t)
+		{
+        	operacaoTransistorAtual [numMOS] = triodo;
+        	printf("Modo de operacao: triodo\n");
+        	gm = netlist[i].K * (netlist[i].W/netlist[i].L)*(2* (vDS))*(1+ netlist[i].LAMBDA* vDS);
+               gDS = netlist[i].K * (netlist[i].W/netlist[i].L) * (2*(vGS - v_t) - 2 * vDS + 4* netlist[i].LAMBDA * ( vGS - v_t) * (vDS) - 3*netlist[i].LAMBDA * pow ( vDS,2));
+               iO = netlist[i].K * (netlist[i].W/netlist[i].L) * (2* (vGS - v_t)*vDS - pow (vDS,2)) - (gm * vGS) - (gDS * vDS);
+          
+		}
+		else
+		{
+			operacaoTransistorAtual [numMOS] = saturacao;
+			printf("Modo de operacao: saturacao\n");
+			gm = netlist[i].K * (netlist[i].W/netlist[i].L)* 2 *(vGS - v_t) * (1 + netlist[i].LAMBDA* vDS);
+			
+            gDS = netlist[i].K * (netlist[i].W/netlist[i].L)* pow ((vGS - v_t),2) * netlist[i].LAMBDA;
+               
+            iO = netlist[i].K * (netlist[i].W/netlist[i].L) * pow((vGS - v_t),2) * (1 + netlist[i].LAMBDA * vDS) 
+			   	- (gm * vGS) - (gDS * vDS);
+		}
+		
+		double gmB = (gm*netlist[i].GAMMA)/(2*sqrt(fabs(netlist[i].THETA - (vAtual[netlist[i].tB] -vAtual[netlist[i].tS]))));
+		
+		iO-= (gmB * (vAtual [netlist[i].tB] -vAtual[netlist[i].tS]));
+		
+		printf ("gm %f gmb %f  gds %f io %f \n", gm, gmB, gDS, iO);
+		
+		
+          Yn[netlist[i].tD][netlist[i].tB]+=gmB;
+          Yn[netlist[i].tS][netlist[i].tS]+=gmB;
+          Yn[netlist[i].tD][netlist[i].tS]-=gmB;
+          Yn[netlist[i].tS][netlist[i].tB]-=gmB;
+
+          Yn[netlist[i].tD][netlist[i].tG]+=gm;
+          Yn[netlist[i].tS][netlist[i].tS]+=gm;
+          Yn[netlist[i].tD][netlist[i].tS]-=gm;
+          Yn[netlist[i].tS][netlist[i].tG]-=gm;
+
+          Yn[netlist[i].tD][netlist[i].tD]+=gDS;
+          Yn[netlist[i].tS][netlist[i].tS]+=gDS;
+          Yn[netlist[i].tD][netlist[i].tS]-=gDS;
+          Yn[netlist[i].tS][netlist[i].tD]-=gDS;
+
+
+         Yn[netlist[i].tD][netlist[i].tD]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tD][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tD]-=g;
+
+         Yn[netlist[i].tS][netlist[i].tS]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tS][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tS]-=g;
+
+         Yn[netlist[i].tB][netlist[i].tB]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tB][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tB]-=g;
+
+          Yn[netlist[i].tD][nv+1]-=iO;
+          Yn[netlist[i].tS][nv+1]+=iO;
+
+          numMos++;
+	}
     else if (tipo=='O') {
       Yn[netlist[i].a][netlist[i].x]+=1;
       Yn[netlist[i].b][netlist[i].x]-=1;
       Yn[netlist[i].x][netlist[i].c]+=1;
       Yn[netlist[i].x][netlist[i].d]-=1;
     }
+    
 #ifdef DEBUG
     /* Opcional: Mostra o sistema apos a montagem da estampa */
     printf("Sistema apos a estampa de %s\n",netlist[i].nome);
