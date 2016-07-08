@@ -38,6 +38,11 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 
 #define FATORAC bla
 
+
+
+
+
+
 enum pontoOperacao{
 	corte, triodo, saturacao
 };
@@ -94,7 +99,7 @@ double
   pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
   
   bool linear = true;
-  bool correct_model;
+  bool correct_model = true;
   bool pOperacao = true; // Para comecar com analise de ponto de operacao
   bool convergiu = false; // Comecar com false para entrar na primeira checagem
   int count_conv = 0; // Contador para convergencia
@@ -168,13 +173,19 @@ int numero(char *nome)
   else {
     return i; /* no ja conhecido */
   }
+    printf("Dentro da Convergencia: %d", convergiu );
+
 }
+
+
 
 void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 {
+
+	
 	double max_err = 0;
 	double tmp_err;
-	if (iteracoes < MAX_ITER)
+	if (iteracoes < MAX_ITER &&(!iteracoes))
 	{
 		for (int counter_var = 0; counter_var <= nv; counter_var++)
 		{
@@ -210,7 +221,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 			count_NOT_conv++;
 		
 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
-		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
+		else if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
 		{
 			correct_model = false;
 			count_conv = 0;
@@ -227,19 +238,16 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 		if (correct_model)
 			iteracoes++;
 		
-		return;
-	}
 	
-	// se "iteracoes" superar MAX_ITER (quantidade maxima de iteracoes que a funcao controleConvergencia pode realizar), assume-se modelo incorreto e zera-se os contadores de iteracao
-	else if (iteracoes >= MAX_ITER)
-	{
-		correct_model = false;
-		count_conv = 0;
-		iteracoes = 0;
-		
-		return;
-	}
+		// se "iteracoes" superar MAX_ITER (quantidade maxima de iteracoes que a funcao controleConvergencia pode realizar), assume-se modelo incorreto e zera-se os contadores de iteracao
+		else if (iteracoes >= MAX_ITER)
+		{
+			correct_model = false;
+			count_conv = 0;
+			iteracoes = 0;
+		}
 	 
+	}
 }
 
 int main(void)
@@ -256,6 +264,7 @@ int main(void)
     printf("Arquivo %s inexistente\n",nomearquivo);
     goto denovo;
   }
+ 
   printf("Lendo netlist:\n");
   fgets(txt,MAX_LINHA,arquivo);
   printf("Titulo: %s",txt);
@@ -388,7 +397,16 @@ int main(void)
   }
   getch();
   	
-	while(!convergiu){
+	while(!convergiu){ //montar sistema nodal modificado
+	
+for (int i=0; i<=nv; i++) {
+      //inicializa os vetores utilizdos na analise de convergencia
+      for (int j=0; j<=nv+1; j++)
+      {
+        Yn[i][j]=0;
+      }
+    }
+    int numMOS = 0;
 		montarEstampaDC();
 		#ifdef DEBUG
 			/* Opcional: Mostra o sistema apos a montagem da estampa */
@@ -403,7 +421,7 @@ int main(void)
 			}
 			getch();
 		#endif
-		  }
+	
 		  /* Resolve o sistema */
 		  if (resolversistema()) {
 			return 1;
@@ -442,6 +460,7 @@ int main(void)
 	  } else{
 		  convergiu = true;
 	  }
+   
 	  for (int i = 1;i<ne;i++){
 		  tipo=netlist[i].nome[0];
 		  if(tipo == 'M'){
@@ -450,6 +469,8 @@ int main(void)
 		  }
 	  }
 	  
+   }
+   return 0;
 }
 
  void montarEstampaDC(){
@@ -561,11 +582,15 @@ int main(void)
 		  Yn[netlist[i].y][netlist[i].x]+=g;
 		}
 		else if (tipo=='M'){
+			int numMOS = 0;
 			g = ((double) 5.0) / FATORDC;
 			gm = 0;
 			gDS = 0;
 			iO = 0;
 			printf("vd %f vs %f\n", vAtual[netlist[i].tD],vAtual[netlist[i].tS]);
+			
+			double vDS = vAtual[netlist[i].tD] - vAtual[netlist[i].tS];
+			
 			if(vAtual[netlist[i].tD] < vAtual[netlist[i].tS])
 			{
 				printf("Tensao no Drain > Tensao no Source\n");
@@ -574,7 +599,7 @@ int main(void)
 				netlist[i].tS = aux;
 			}
 			double vGS = vAtual[netlist[i].tG] - vAtual[netlist[i].tS];
-			double vDS = vAtual[netlist[i].tD] - vAtual[netlist[i].tS];
+			
 			double vt = netlist[i].VT + netlist[i].GAMMA * (sqrt(fabs(netlist[i].THETA - (vAtual[netlist[i].tB] -vAtual[netlist[i].tS]))) - sqrt(fabs(netlist[i].THETA)));
 			printf ("vt: %f  vGS: %f vDS: %f vS: %f tS %d\n", vt,vGS,vDS, vAtual[netlist[i].tS], netlist[i].tS);
 			if (vGS < vt)
