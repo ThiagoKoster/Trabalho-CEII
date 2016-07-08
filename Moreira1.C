@@ -29,20 +29,31 @@ Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS
 #define MAX_NOS 50
 #define TOLG 1e-9
 #define DEBUG
+<<<<<<< HEAD
 #define FATORDC 10e9
 #define MAX_ERRO 10e-9			//valor maximo de erro para iteracoes
 #define MAX_ITER 50 			//maximo de iteracoes
 #define REF_VAL 1 				//valor de referencia utilizado nos calculos de convergencias
 #define MIN_ITER_CONV 2 		//numero minimo de iteracoes para considerar como estavel a solucao
 #define TRY_CONV 5 				//o numero de tentativas que o algoritmo faz para calcular uma solucao, mesmo nao convergindo
+=======
+#define FATORDC 10e12
+#define FATORAC bla
+>>>>>>> master
 
 typedef struct elemento { /* Definição de Elemento */
   char nome[MAX_NOME];
   double valor;
-  int a,b,c,d, e,f,g,h,i,j,k,l,m,x,y;
+  int a,b,c,d,x,y,tD,tG,tS,tB;
+  float L,W,K,VT,LAMBDA,GAMMA,TETHA,LD;
+  char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
 } elemento;
 
 elemento netlist[MAX_ELEM]; /* Lista de Elementos -> Netlist */
+
+enum pontoOperacao{
+	corte, triodo, saturacao
+};
 
 int
   ne, /* Número de Elementos */
@@ -56,7 +67,7 @@ char
   nomearquivo[MAX_LINHA+1],
   tipo, 
   na[MAX_NOME],nb[MAX_NOME],nc[MAX_NOME],nd[MAX_NOME],
-  nee[MAX_NOME],nef[MAX_NOME],neg[MAX_NOME],neh[MAX_NOME],nei[MAX_NOME],nej[MAX_NOME],nek[MAX_NOME],nel[MAX_NOME],nem[MAX_NOME], //Variáveis extras para o transistor
+  nNPMOS[MAX_NOME],nL[MAX_NOME],nW[MAX_NOME],nK[MAX_NOME],nVT[MAX_NOME],nLAMBDA[MAX_NOME],nGAMMA[MAX_NOME],nTETHA[MAX_NOME],nLD[MAX_NOME], //Variáveis extras para o transistor
   lista[MAX_NOS+1][MAX_NOME+2], /*Tem que caber jx antes do nome */
   txt[MAX_LINHA+1],
   *p;
@@ -64,7 +75,13 @@ FILE *arquivo;
 
 double
   g,
+  gm,    //
+  gDS,  // // Variaveis para o transistor.
+  iO,  //
   Yn[MAX_NOS+1][MAX_NOS+2];
+  
+  pontoOperacao operacaoTransistorAtual [MAX_NOS +1];
+  pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
 
 /* Resolucao de sistema de equacoes lineares.
    Metodo de Gauss-Jordan com condensacao pivotal */
@@ -229,11 +246,21 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='I' || tipo=='V' || tipo=='L' || tipo=='C' || tipo=='K') {
+    if (tipo=='R' || tipo=='I' || tipo=='V' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
+    }
+    else if (tipo=='K') {
+      sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
+      printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
+      
+      for(int count = 0; count < MAX_NOME; count++){
+    	netlist[ne].nomeA[count]=na[count];
+      	netlist[ne].nomeB[count]=nb[count];
+	  }
+	  
     }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
@@ -252,21 +279,23 @@ int main(void)
       netlist[ne].d=numero(nd);
     }
 	else if (tipo=='M'){
-	  sscanf(p,"%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s",na,nb,nc,nd,nee,nef,neg,neh,nei,nej,nek,nel,nem);
-      printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",netlist[ne].nome,na,nb,nc,nd,nee,nef,neg,neh,nei,nej,nek,nel,nem);
+	  sscanf(p,"%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s%10s",na,nb,nc,nd,nNPMOS,nL,nW,nK,nVT,nLAMBDA,nGAMMA,nTETHA,nLD);
+      printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",netlist[ne].nome,na,nb,nc,nd,nNPMOS,nL,nW,nK,nVT,nLAMBDA,nGAMMA,nTETHA,nLD);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
       netlist[ne].c=numero(nc);
       netlist[ne].d=numero(nd);
-      netlist[ne].e=numero(nee);
-      netlist[ne].f=numero(nef);
-      netlist[ne].g=numero(neg);
-      netlist[ne].h=numero(neh);
-      netlist[ne].i=numero(nei);
-      netlist[ne].j=numero(nej);
-      netlist[ne].k=numero(nek);
-      netlist[ne].l=numero(nel);
-      netlist[ne].m=numero(nem);
+      for (int count = 0; count < MAX_NOME; count++){
+      	netlist[ne].NPMOS[count]=nNPMOS[count];	
+	  }
+      netlist[ne].L=strtof(nL, NULL);
+      netlist[ne].W=strtof(nW, NULL);
+      netlist[ne].K=strtof(nK, NULL);
+      netlist[ne].VT=strtof(nVT, NULL);
+      netlist[ne].LAMBDA=strtof(nLAMBDA, NULL);
+      netlist[ne].GAMMA=strtof(nGAMMA, NULL);
+      netlist[ne].TETHA=strtof(nTETHA, NULL);
+      netlist[ne].LD=strtof(nLD, NULL);
 	}
     else if (tipo=='*') { /* Comentario comeca com "*" */
       printf("Comentario: %s",txt);
@@ -286,7 +315,7 @@ int main(void)
   nn=nv;
   for (i=1; i<=ne; i++) {
     tipo=netlist[i].nome[0];
-    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O') {
+    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O' || tipo=='K') {
       nv++;
       if (nv>MAX_NOS) {
         printf("As correntes extra excederam o numero de variaveis permitido (%d)\n",MAX_NOS);
@@ -320,6 +349,12 @@ int main(void)
     if (tipo=='R' || tipo=='I' || tipo=='V') {
       printf("%s %d %d %g\n",netlist[i].nome,netlist[i].a,netlist[i].b,netlist[i].valor);
     }
+	else if(tipo == 'C'){
+		printf("%s %d %d %g\n","RC",netlist[i].a,netlist[i].b,netlist[i].valor * FATORDC);
+	}
+	else if(tipo == 'L'){
+		printf("%s %d %d %g\n","RL",netlist[i].a,netlist[i].b,netlist[i].valor / FATORDC);
+	}
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       printf("%s %d %d %d %d %g\n",netlist[i].nome,netlist[i].a,netlist[i].b,netlist[i].c,netlist[i].d,netlist[i].valor);
     }
@@ -341,6 +376,7 @@ int main(void)
       Yn[i][j]=0;
   }
   /* Monta estampas */
+  int numMOS = 0;
   for (i=1; i<=ne; i++) {
     tipo=netlist[i].nome[0];
     if (tipo=='R') {
@@ -350,14 +386,38 @@ int main(void)
       Yn[netlist[i].a][netlist[i].b]-=g;
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
-    if (tipo=='C') {
+    else if (tipo=='K') {
+      g=netlist[i].valor;
+      
+      for (int count1 = 1; count1 <= ne; count1++){
+    	if (netlist[i].nomeA == netlist[count1].nome){
+    		Yn[netlist[i].x][netlist[count1].a]+=g;
+      		Yn[netlist[i].x][netlist[count1].b]-=g;
+    		Yn[netlist[count1].x][netlist[i].x]-=g;
+      		Yn[netlist[count1].x][netlist[i].x]+=g;
+    		break;
+		}
+	  }
+	  
+	for (int count2 = 1; count2 <= ne; count2++){
+    	if (netlist[i].nomeB == netlist[count2].nome){
+			Yn[netlist[i].x][netlist[count2].a]-=1;
+			Yn[netlist[i].x][netlist[count2].b]+=1;
+			Yn[netlist[count2].x][netlist[i].x]+=1;
+		    Yn[netlist[count2].x][netlist[i].x]-=1;
+    		break;
+		}
+	  }
+
+    }
+    else if (tipo=='C') {
       g=netlist[i].valor / FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
       Yn[netlist[i].a][netlist[i].b]-=g;
       Yn[netlist[i].b][netlist[i].a]-=g;
     }
-    if (tipo=='L') {
+    else if (tipo=='L') {
       g=netlist[i].valor * FATORDC;
       Yn[netlist[i].a][netlist[i].a]+=g;
       Yn[netlist[i].b][netlist[i].b]+=g;
@@ -413,12 +473,99 @@ int main(void)
       Yn[netlist[i].x][netlist[i].d]+=1;
       Yn[netlist[i].y][netlist[i].x]+=g;
     }
+    else if (tipo=='M'){
+    	g = ((double) 5.0) / FATORDC;
+    	gm = 0;
+    	gDS = 0;
+    	iO = 0;
+    	printf("vd %f vs %f\n", vAtual[netlist[i].tD],vAtual[netlist[i].tS]);
+    	if(vAtual[netlist[i].tD] < vAtual[netlist[i].tS])
+    	{
+    		printf("Tensao no Drain > Tensao no Source\n");
+    		int aux = netlist[i].tD;
+    		netlist[i].tD = netlist[i].tS;
+    		netlist[i].tS = aux;
+		}
+		double vGS = vAtual[netlist[i].tG] - vAtual[netlist[i].tS];
+		double vDS = vAtual[netlist[i].tD] - vAtual[netlist[i].tS];
+		double v_t = netlist[i].VT + netlist[i].GAMMA * (sqrt(fabs(netlist[i].TETHA - (vAtual[netlist[i].tB] -vAtual[netlist[i].tS]))) - sqrt(fabs(netlist[i].TETHA)));
+		printf ("v_t: %f  vGS: %f vDS: %f vS: %f tS %d\n", v_t,vGS,vDS, vAtual[netlist[i].tS], netlist[i].tS);
+		if (vGS < v_t)
+          {
+               operacaoTransistorAtual [numMOS] = corte;
+               printf ("Modo de operacao: corte\n");
+          }
+        else if (vDS < vGS - v_t)
+		{
+        	operacaoTransistorAtual [numMOS] = triodo;
+        	printf("Modo de operacao: triodo\n");
+        	gm = netlist[i].K * (netlist[i].W/netlist[i].L)*(2* (vDS))*(1+ netlist[i].LAMBDA* vDS);
+               gDS = netlist[i].K * (netlist[i].W/netlist[i].L) * (2*(vGS - v_t) - 2 * vDS + 4* netlist[i].LAMBDA * ( vGS - v_t) * (vDS) - 3*netlist[i].LAMBDA * pow ( vDS,2));
+               iO = netlist[i].K * (netlist[i].W/netlist[i].L) * (2* (vGS - v_t)*vDS - pow (vDS,2)) - (gm * vGS) - (gDS * vDS);
+          
+		}
+		else
+		{
+			operacaoTransistorAtual [numMOS] = saturacao;
+			printf("Modo de operacao: saturacao\n");
+			gm = netlist[i].K * (netlist[i].W/netlist[i].L)* 2 *(vGS - v_t) * (1 + netlist[i].LAMBDA* vDS);
+			
+            gDS = netlist[i].K * (netlist[i].W/netlist[i].L)* pow ((vGS - v_t),2) * netlist[i].LAMBDA;
+               
+            iO = netlist[i].K * (netlist[i].W/netlist[i].L) * pow((vGS - v_t),2) * (1 + netlist[i].LAMBDA * vDS) 
+			   	- (gm * vGS) - (gDS * vDS);
+		}
+		
+		double gmB = (gm*netlist[i].GAMMA)/(2*sqrt(fabs(netlist[i].THETA - (vAtual[netlist[i].tB] -vAtual[netlist[i].tS]))));
+		
+		iO-= (gmB * (vAtual [netlist[i].tB] -vAtual[netlist[i].tS]));
+		
+		printf ("gm %f gmb %f  gds %f io %f \n", gm, gmB, gDS, iO);
+		
+		
+          Yn[netlist[i].tD][netlist[i].tB]+=gmB;
+          Yn[netlist[i].tS][netlist[i].tS]+=gmB;
+          Yn[netlist[i].tD][netlist[i].tS]-=gmB;
+          Yn[netlist[i].tS][netlist[i].tB]-=gmB;
+
+          Yn[netlist[i].tD][netlist[i].tG]+=gm;
+          Yn[netlist[i].tS][netlist[i].tS]+=gm;
+          Yn[netlist[i].tD][netlist[i].tS]-=gm;
+          Yn[netlist[i].tS][netlist[i].tG]-=gm;
+
+          Yn[netlist[i].tD][netlist[i].tD]+=gDS;
+          Yn[netlist[i].tS][netlist[i].tS]+=gDS;
+          Yn[netlist[i].tD][netlist[i].tS]-=gDS;
+          Yn[netlist[i].tS][netlist[i].tD]-=gDS;
+
+
+         Yn[netlist[i].tD][netlist[i].tD]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tD][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tD]-=g;
+
+         Yn[netlist[i].tS][netlist[i].tS]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tS][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tS]-=g;
+
+         Yn[netlist[i].tB][netlist[i].tB]+=g;
+         Yn[netlist[i].tG][netlist[i].tG]+=g;
+         Yn[netlist[i].tB][netlist[i].tG]-=g;
+         Yn[netlist[i].tG][netlist[i].tB]-=g;
+
+          Yn[netlist[i].tD][nv+1]-=iO;
+          Yn[netlist[i].tS][nv+1]+=iO;
+
+          numMos++;
+	}
     else if (tipo=='O') {
       Yn[netlist[i].a][netlist[i].x]+=1;
       Yn[netlist[i].b][netlist[i].x]-=1;
       Yn[netlist[i].x][netlist[i].c]+=1;
       Yn[netlist[i].x][netlist[i].d]-=1;
     }
+    
 #ifdef DEBUG
     /* Opcional: Mostra o sistema apos a montagem da estampa */
     printf("Sistema apos a estampa de %s\n",netlist[i].nome);
@@ -443,7 +590,7 @@ int main(void)
   printf("Sistema resolvido:\n");
   for (i=1; i<=nv; i++) {
       for (j=1; j<=nv+1; j++){
-      	if ((Yn[i][j] >= -0.000000001) && (Yn[i][j] <= 0.000000001)) {
+      	if ((Yn[i][j] >= -1/FATORDC*1000) && (Yn[i][j] <= 1/FATORDC*1000)) {
 		  Yn[i][j] *= 0;
 		}
         if (Yn[i][j]!=0) {
@@ -467,3 +614,4 @@ int main(void)
   getch();
   return 0;
 }
+
