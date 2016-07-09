@@ -75,7 +75,7 @@ typedef struct elemento { /* Defini??o de Elemento */
   int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos 
 
   double L,W,K,VT,LAMBDA,GAMMA,THETA,LD, ALPHA;
-  char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
+  char nomeLa[MAX_NOME], nomeLb[MAX_NOME], NPMOS[MAX_NOME];
   pontoOperacao operacaoTransistor;
   tipoMOS pnMOS;
 } elemento;
@@ -139,6 +139,7 @@ double
    
  void calculoCapacitanciasParasitas(elemento netlist[]);
  void montarEstampa();
+ int achaIndutor(char *nomeElemento);
 
 inline double sinDouble (double angulo)
  {
@@ -162,6 +163,44 @@ inline cosDouble (double angulo)
 			return (coseno);
 }
    
+
+//funcao usada para criar a estampa AC do transformador
+//funcionando
+int procuraIndutorTransformador(char nomeElemento[])
+{
+	int i ;
+	char nomeCompara[MAX_NOME+1];
+
+  if (nomeElemento[0] != 'L') // verifica se elemento passado eh um indutor
+  {
+     printf("Um dos componentes do transformador nao eh um indutor\n");
+     getch();
+     exit(1);
+  }
+	else{
+		 i = 1;
+		 nomeCompara[0] = 'j';
+     while(nomeElemento[i-1]!='\0')
+     	{
+          nomeCompara[i] = nomeElemento[i-1];
+          i++;
+     	}
+		 nomeCompara[i] = '\0';
+
+		 i = 0;
+		 do{
+			 if( !strcmp(nomeCompara,lista[i]) )
+			 		return( i );
+			 i++;
+		 }while( i <= nv);
+
+  		if (i==nv+1) {
+      	printf("Nao encontrado o indutor especificado\n");
+      	exit(1);
+  		}
+	}
+}
+
 
 int resolversistema_DC(void)
 {
@@ -387,13 +426,13 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='I' || tipo=='L' || tipo=='C') {
+    if (tipo=='R' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
     }
-    else if (tipo == 'V'){
+    else if (tipo == 'V' || tipo=='I' ){
     sscanf(p,"%10s%10s%lg%lg%lg",na,nb,&netlist[ne].modulo,&netlist[ne].fase,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
@@ -401,15 +440,17 @@ int main(void)
 
 	}
     else if (tipo=='K') {
-      sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
+			 sscanf(p,"%10s%10s%lg",&netlist[ne].nomeLa,&netlist[ne].nomeLb,&netlist[ne].valor);
+			 printf("%s %s %s %g\n",netlist[ne].nome,netlist[ne].nomeLa,netlist[ne].nomeLb,netlist[ne].valor);
+
+      /*sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
 
       for(int count = 0; count < MAX_NOME; count++){
     	netlist[ne].nomeA[count]=na[count];
-      	netlist[ne].nomeB[count]=nb[count];
-	  }
+      	netlist[ne].nomeB[count]=nb[count];*/
+	}
 
-    }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
       printf("%s %s %s %s %s %g\n",netlist[ne].nome,na,nb,nc,nd,netlist[ne].valor);
@@ -459,7 +500,7 @@ int main(void)
   nn=nv;
   for (i=1; i<=ne; i++) {
     tipo=netlist[i].nome[0];
-    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O' || tipo=='K' || tipo =='L') {
+    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O' || tipo =='L') {
       nv++;
       if (nv>MAX_NOS) {
         printf("As correntes extra excederam o numero de variaveis permitido (%d)\n",MAX_NOS);
@@ -620,10 +661,24 @@ for (int indice=0; indice<=nv; indice++) {
 				 YnComplex[netlist[i].b][netlist[i].a]-=gComplex;
 			}
 		}
-		else if (tipo=='K') {					// MUDAR, NAO ENTENDI O QUE O VITOR FEZ DIREITO
-		  g=netlist[i].valor;
+		else if (tipo=='K') {
+			if(flagDC){
+				continue;
+			}
+			else{
+				int indutorLa = procuraIndutorTransformador(netlist[i].nomeLa);
+				int indutorLb = procuraIndutorTransformador(netlist[i].nomeLb);
 
-		  for (int count1 = 1; count1 <= ne; count1++){
+				double valLa = netlist[ indutorLa ].valor;
+                double valLb = netlist[ indutorLb ].valor;
+                printf("valLa: %.6f valLb: %.6f\n", valLa, valLb);
+
+                double M = netlist[i].valor * sqrt(valLa * valLb);
+                YnComplex[indutorLa][indutorLb] += 0.0 + J*2.0*PI*frequencia*M;
+                YnComplex[indutorLb][indutorLa] += 0.0 + J*2.0*PI*frequencia*M;
+			}
+
+	/*	  for (int count1 = 1; count1 <= ne; count1++){   // O QUE O VITOR FEZ, APAGAR?!
 				if (netlist[i].nomeA == netlist[count1].nome){
 					Yn[netlist[i].x][netlist[count1].a]+=g;
 					Yn[netlist[i].x][netlist[count1].b]-=g;
@@ -631,7 +686,6 @@ for (int indice=0; indice<=nv; indice++) {
 					Yn[netlist[count1].x][netlist[i].x]+=g;
 					break;
 				}
-			}
 
 			for (int count2 = 1; count2 <= ne; count2++){
 				if (netlist[i].nomeB == netlist[count2].nome){
@@ -642,8 +696,7 @@ for (int indice=0; indice<=nv; indice++) {
 					Yn[netlist[count2].x][netlist[i].x]-=1;
 					break;
 				}
-			}
-
+			} */
 		}
 		else if (tipo=='C'){										//Monta estampa para o CAPACITOR, dependendo do flagDC monta estampa DC ou AC.
 			if(flagDC){
