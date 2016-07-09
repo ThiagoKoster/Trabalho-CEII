@@ -1,20 +1,19 @@
-/* An?lise nodal modificada de:
--  Ponto de Opera??o
--  An?lise no Estado Permanente
-
+/* Análise nodal modificada de:
+-  Ponto de Operação
+-  Análise no Estado Permanente
 Elementos aceitos:
-Resistor: R<nome> <n? +> <n? -> <Resist?ncia>
-Indutor: L<nome> <n? +> <n? -> <Indut?ncia>
-Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores j? declarados.)
-Capacitor: C<nome> <n? +> <n? -> <Capacit?ncia>
-Fonte de tens?o controlada a tens?o: E<nome> <n? V+> <n? V-> <n? v+> <n? v-> <Av>
-Fonte de corrente controlada a corrente: F<nome> <n? I+> <n? I-> <n? i+> <n? i-> <Ai>
-Fonte de corrente controlada a tens?o: G<nome> <n? I+> <n? I-> <n? v+> <n? v-> <Gm>
-Fonte de tens?o controlada a corrente: H<nome> <n? V+> <n? V-> <n? i+> <n? i-> <Rm>
-Fonte de corrente: I<nome> <n? +> <n? -> <m?dulo> <fase (graus)> <valor cont?nuo>
-Fonte de tens?o: V<nome> <n? +> <n? -> <m?dulo> <fase (graus)> <valor cont?nuo>
-Amplificador operacional ideal: O<nome> <n? sa?da +> <n? sa?da -> <n? entrada +> <n? entrada ->
-Transistor MOS: M<nome> <n? drain> <n? gate> <n? source> <n? base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
+Resistor: R<nome> <nó +> <nó -> <Resistência>
+Indutor: L<nome> <nó +> <nó -> <Indutância>
+Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores já declarados.)
+Capacitor: C<nome> <nó +> <nó -> <Capacitância>
+Fonte de tensão controlada a tensão: E<nome> <nó V+> <nó V-> <nó v+> <nó v-> <Av>
+Fonte de corrente controlada a corrente: F<nome> <nó I+> <nó I-> <nó i+> <nó i-> <Ai>
+Fonte de corrente controlada a tensão: G<nome> <nó I+> <nó I-> <nó v+> <nó v-> <Gm>
+Fonte de tensão controlada a corrente: H<nome> <nó V+> <nó V-> <nó i+> <nó i-> <Rm>
+Fonte de corrente: I<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
+Fonte de tensão: V<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
+Amplificador operacional ideal: O<nome> <nó saída +> <nó saída -> <nó entrada +> <nó entrada ->
+Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
 */
 
 /*
@@ -276,7 +275,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			if (fabs(vProximo[counter_var]) > REF_VAL)
  				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
 
- 			//tmp_err = discrep�ncia absoluta
+ 			//tmp_err = discrepância absoluta
 
  			if (vProximo[counter_var] < REF_VAL)
  				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
@@ -291,7 +290,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			vAtual[counter_var] = vProximo[counter_var];
 
 
- 		//exibe o erro atual entre o n� atual e o n� futuro
+ 		//exibe o erro atual entre o nó atual e o nó futuro
 
  		printf("\nErro atual: %.10f\n", max_err);
 
@@ -307,7 +306,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			count_NOT_conv++;
 
 
- 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e s�o zerados os contadores para iteracoes
+ 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
 
  		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
  		{
