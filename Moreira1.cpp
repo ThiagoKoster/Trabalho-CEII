@@ -74,7 +74,7 @@ typedef struct elemento { /* Definição de Elemento */
   double cgb,cgs,cgd;
   int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos
   double L,W,K,VT,LAMBDA,GAMMA,THETA,LD, ALPHA;
-  char La[MAX_NOME], Lb[MAX_NOME], NPMOS[MAX_NOME];
+  char nomeLa[MAX_NOME], nomeLb[MAX_NOME], NPMOS[MAX_NOME];
   pontoOperacao operacaoTransistor;
   tipoMOS pnMOS;
 } elemento;
@@ -461,13 +461,13 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='I' || tipo=='L' || tipo=='C') {
+    if (tipo=='R' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
     }
-    else if (tipo == 'V'){
+    else if (tipo == 'V' || tipo=='I' ){
     sscanf(p,"%10s%10s%lg%lg%lg",na,nb,&netlist[ne].modulo,&netlist[ne].fase,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
@@ -484,9 +484,8 @@ int main(void)
       for(int count = 0; count < MAX_NOME; count++){
     	netlist[ne].nomeA[count]=na[count];
       	netlist[ne].nomeB[count]=nb[count];*/
-	  }
+	}
 
-    }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
       sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
       printf("%s %s %s %s %s %g\n",netlist[ne].nome,na,nb,nc,nd,netlist[ne].valor);
@@ -702,16 +701,16 @@ for (int indice=0; indice<=nv; indice++) {
 				continue;
 			}
 			else{
-				int indutorLa = procuraIndutorTransformador(netlist[i].La);
-				int indutorLb = procuraIndutorTransformador(netlist[i].Lb);
+				int indutorLa = procuraIndutorTransformador(netlist[i].nomeLa);
+				int indutorLb = procuraIndutorTransformador(netlist[i].nomeLb);
 
 				double valLa = netlist[ indutorLa ].valor;
-        double valLb = netlist[ indutorLb ].valor;
-        printf("valLa: %.6f valLb: %.6f\n", valLa, valLb);
+                double valLb = netlist[ indutorLb ].valor;
+                printf("valLa: %.6f valLb: %.6f\n", valLa, valLb);
 
-        double M = netlist[i].valor * sqrt(valL1 * valL2);
-        YnComplex[L1][L2] += 0.0 + J*2.0*PI*frequencia*M;
-        YnComplex[L2][L1] += 0.0 + J*2.0*PI*frequencia*M;
+                double M = netlist[i].valor * sqrt(valLa * valLb);
+                YnComplex[indutorLa][indutorLb] += 0.0 + J*2.0*PI*frequencia*M;
+                YnComplex[indutorLb][indutorLa] += 0.0 + J*2.0*PI*frequencia*M;
 			}
 
 	/*	  for (int count1 = 1; count1 <= ne; count1++){   // O QUE O VITOR FEZ, APAGAR?!
