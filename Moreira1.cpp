@@ -1,19 +1,20 @@
-/* An√°lise nodal modificada de:
--  Ponto de Opera√ß√£o
--  An√°lise no Estado Permanente
+/* An·lise nodal modificada de:
+-  Ponto de OperaÁ„o
+-  An·lise no Estado Permanente
+
 Elementos aceitos:
-Resistor: R<nome> <n√≥ +> <n√≥ -> <Resist√™ncia>
-Indutor: L<nome> <n√≥ +> <n√≥ -> <Indut√¢ncia>
-Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores j√° declarados.)
-Capacitor: C<nome> <n√≥ +> <n√≥ -> <Capacit√¢ncia>
-Fonte de tens√£o controlada a tens√£o: E<nome> <n√≥ V+> <n√≥ V-> <n√≥ v+> <n√≥ v-> <Av>
-Fonte de corrente controlada a corrente: F<nome> <n√≥ I+> <n√≥ I-> <n√≥ i+> <n√≥ i-> <Ai>
-Fonte de corrente controlada a tens√£o: G<nome> <n√≥ I+> <n√≥ I-> <n√≥ v+> <n√≥ v-> <Gm>
-Fonte de tens√£o controlada a corrente: H<nome> <n√≥ V+> <n√≥ V-> <n√≥ i+> <n√≥ i-> <Rm>
-Fonte de corrente: I<nome> <n√≥ +> <n√≥ -> <m√≥dulo> <fase (graus)> <valor cont√≠nuo>
-Fonte de tens√£o: V<nome> <n√≥ +> <n√≥ -> <m√≥dulo> <fase (graus)> <valor cont√≠nuo>
-Amplificador operacional ideal: O<nome> <n√≥ sa√≠da +> <n√≥ sa√≠da -> <n√≥ entrada +> <n√≥ entrada ->
-Transistor MOS: M<nome> <n√≥ drain> <n√≥ gate> <n√≥ source> <n√≥ base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
+Resistor: R<nome> <nÛ +> <nÛ -> <ResistÍncia>
+Indutor: L<nome> <nÛ +> <nÛ -> <Indut‚ncia>
+Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores j· declarados.)
+Capacitor: C<nome> <nÛ +> <nÛ -> <Capacit‚ncia>
+Fonte de tens„o controlada a tens„o: E<nome> <nÛ V+> <nÛ V-> <nÛ v+> <nÛ v-> <Av>
+Fonte de corrente controlada a corrente: F<nome> <nÛ I+> <nÛ I-> <nÛ i+> <nÛ i-> <Ai>
+Fonte de corrente controlada a tens„o: G<nome> <nÛ I+> <nÛ I-> <nÛ v+> <nÛ v-> <Gm>
+Fonte de tens„o controlada a corrente: H<nome> <nÛ V+> <nÛ V-> <nÛ i+> <nÛ i-> <Rm>
+Fonte de corrente: I<nome> <nÛ +> <nÛ -> <mÛdulo> <fase (graus)> <valor contÌnuo>
+Fonte de tens„o: V<nome> <nÛ +> <nÛ -> <mÛdulo> <fase (graus)> <valor contÌnuo>
+Amplificador operacional ideal: O<nome> <nÛ saÌda +> <nÛ saÌda -> <nÛ entrada +> <nÛ entrada ->
+Transistor MOS: M<nome> <nÛ drain> <nÛ gate> <nÛ source> <nÛ base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
 */
 
 /*
@@ -68,11 +69,16 @@ enum pontoOperacao{
 enum tipoMOS{
 	nmos,pmos};
 
-typedef struct elemento { /* Defini√ß√£o de Elemento */
+typedef struct elemento { /* DefiniÁ„o de Elemento */
   char nome[MAX_NOME];
   double valor,modulo,fase;
+<<<<<<< HEAD
+  double cgB,cgS,cgD,gdS,gm,gmB;
+  int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos 
+=======
   double cgb,cgs,cgd;
   int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos
+>>>>>>> origin/master
   double L,W,K,VT,LAMBDA,GAMMA,THETA,LD, ALPHA;
   char nomeA[MAX_NOME], nomeB[MAX_NOME], NPMOS[MAX_NOME];
   pontoOperacao operacaoTransistor;
@@ -84,9 +90,9 @@ elemento netlist[MAX_ELEM]; /* Lista de Elementos -> Netlist */
 
 
 int
-  ne, /* N√∫mero de Elementos */
-  nv, /* N√∫mero de Variaveis */
-  nn, /* N√∫mero de N√≥s */
+  ne, /* N˙mero de Elementos */
+  nv, /* N˙mero de Variaveis */
+  nn, /* N˙mero de NÛs */
   i,j,k;
 
 char
@@ -96,7 +102,7 @@ char
   tipo,
   na[MAX_NOME],nb[MAX_NOME],nc[MAX_NOME],nd[MAX_NOME],
   ntD[MAX_NOME], ntG[MAX_NOME], ntS[MAX_NOME], ntB[MAX_NOME],
-  ntTipo[MAX_NOME],nL[MAX_NOME],nW[MAX_NOME],nK[MAX_NOME],nVT[MAX_NOME],nLAMBDA[MAX_NOME],nGAMMA[MAX_NOME],nTHETA[MAX_NOME],nLD[MAX_NOME], //Vari√°veis extras para o transistor
+  ntTipo[MAX_NOME],nL[MAX_NOME],nW[MAX_NOME],nK[MAX_NOME],nVT[MAX_NOME],nLAMBDA[MAX_NOME],nGAMMA[MAX_NOME],nTHETA[MAX_NOME],nLD[MAX_NOME], //Vari·veis extras para o transistor
   lista[MAX_NOS+1][MAX_NOME+2], /*Tem que caber jx antes do nome */
   txt[MAX_LINHA+1],
   *p;
@@ -111,16 +117,26 @@ double
   gDS,   // // Variaveis para o transistor.
   gmB,  //
   iO,  //
+<<<<<<< HEAD
+  frequencia_variavel,  
+=======
   frequencia,
+>>>>>>> origin/master
   Yn[MAX_NOS+1][MAX_NOS+2],
   vAtual[MAX_NOS+1],
   vProximo[MAX_NOS+1];
 
   pontoOperacao operacaoTransistorAtual [MAX_NOS +1];
   pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
+<<<<<<< HEAD
+  
+  
+  bool frequenciaHz = true; //Utiliza a frequencia_variavel em Hz por default
+=======
 
 
   bool frequenciaHz = true; //Utiliza a frequencia em Hz por default
+>>>>>>> origin/master
   bool linear = true;
   bool correct_model = true;
   bool flagDC = true; // Para comecar pela analise do ponto de operacao
@@ -134,8 +150,13 @@ double
 
 /* Resolucao de sistema de equacoes lineares.
    Metodo de Gauss-Jordan com condensacao pivotal */
+<<<<<<< HEAD
+   
+ void calculoCapacitanciasParasitas(elemento netlist[i]);
+=======
 
 
+>>>>>>> origin/master
  void montarEstampa();
 
 inline double sinDouble (double angulo)
@@ -159,6 +180,21 @@ inline cosDouble (double angulo)
     else
 			return (coseno);
 }
+<<<<<<< HEAD
+   
+int resolversistema(void)
+{
+  int i,j,l, a;
+  double t, p;
+
+  for (i=1; i<=nv; i++) {
+    t=0.0;
+    a=i;
+    for (l=i; l<=nv; l++) {
+      if (fabs(Yn[l][i])>fabs(t)) {
+	a=l;
+	t=Yn[l][i];
+=======
 
 int resolversistema_DC(void)
 {
@@ -178,11 +214,30 @@ int resolversistema_DC(void)
 		p = Yn[i][l];
 		Yn[i][l] = Yn[a][l];
 		Yn[a][l] = p;
+>>>>>>> origin/master
       }
-    if (fabs(t) < TOLG) {
+    }
+<<<<<<< HEAD
+    if (i!=a) {
+      for (l=1; l<=nv+1; l++) {
+	p=Yn[i][l];
+	Yn[i][l]=Yn[a][l];
+	Yn[a][l]=p;
+      }
+    }
+    if (fabs(t)<TOLG) {
       printf("Sistema singular\n");
       return 1;
     }
+    for (j=nv+1; j>0; j--) {  /* Basta j>i em vez de j>0 */
+      Yn[i][j]/= t;
+      p=Yn[i][j];
+      if (p!=0)  /* Evita operacoes com zero */
+        for (l=1; l<=nv; l++) {  
+	  if (l!=i)
+	    Yn[l][j]-=Yn[l][i]*p;
+        }
+=======
     for (j = nv+1; j > 0; j--) {  /* Basta j>i em vez de j>0 */
       Yn[i][j] /= t;
       p = Yn[i][j];
@@ -225,6 +280,7 @@ int resolversistema_AC(void)
         for (l = 1; l <= nv; l++)
 			if (l != i)
 				YnComplex[l][j] -= YnComplex[l][i] * p;
+>>>>>>> origin/master
     }
   }
   return 0;
@@ -265,11 +321,16 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  	{
  		for (int counter_var = 0; counter_var <= nv; counter_var++)
  		{
- 			//tmp_err = discrep√¢ncia relativa
+ 			//tmp_err = discrep‚ncia relativa
  			if (fabs(vProximo[counter_var]) > REF_VAL)
  				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
+<<<<<<< HEAD
+ 
+ 			//tmp_err = discrep‚ncia absoluta
+=======
 
  			//tmp_err = discrep√¢ncia absoluta
+>>>>>>> origin/master
  			if (vProximo[counter_var] < REF_VAL)
  				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
 
@@ -281,8 +342,13 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  		//faz com o que as tensoes futuras sejam as atuais
  		for (int counter_var = 0; counter_var <= nv; counter_var++)
  			vAtual[counter_var] = vProximo[counter_var];
+<<<<<<< HEAD
+ 
+ 		//exibe o erro atual entre o nÛ atual e o nÛ futuro
+=======
 
  		//exibe o erro atual entre o n√≥ atual e o n√≥ futuro
+>>>>>>> origin/master
  		printf("\nErro atual: %.10f\n", max_err);
 
  		// se convergir, mantem-se o modelo do transistor e incrementa-se o contador da quantidade de vezes que o algoritmo convergiu
@@ -295,8 +361,13 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  		// senao, incrementa-se o contador da quantidade de vezes que o algoritmo NAO convergiu
  		else if (max_err >= MAX_ERRO)
  			count_NOT_conv++;
+<<<<<<< HEAD
+ 		
+ 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e s„o zerados os contadores para iteracoes
+=======
 
  		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e s√£o zerados os contadores para iteracoes
+>>>>>>> origin/master
  		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
  		{
  			correct_model = false;
@@ -329,6 +400,23 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 
  }
 
+<<<<<<< HEAD
+ void calculoCapacitanciasParasitas(netlist[i]){
+	if(netlist[i].operacaoTransistor == corte){
+		netlist[i].cgB = netlist[i].ALPHA * netlist[i].W * netlist[i].L;
+		netlist[i].cgS = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
+		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;	
+	}
+	else if (netlist[i].operacaoTransistor == triodo){
+		netlist[i].cgB = 0;
+		netlist[i].cgS = (1.0/2 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);
+		netlist[i].cgS = (1.0/2 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);		
+	}
+	else{
+		netlist[i].cgB = 0;
+		netlist[i].cgS = (2.0/3 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);
+		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
+=======
 
  // Tirar depois (Exemplo Diogo)
 	/*double max_err = 0;
@@ -390,8 +478,9 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 			iteracoes = 0;
 		}
 
+>>>>>>> origin/master
 	}
-} */
+ }
 
 int main(void)
 {
@@ -571,9 +660,13 @@ for (int indice=0; indice<=nv; indice++) {
 			}
 			getch();
 		#endif
+<<<<<<< HEAD
+																					
+=======
 
+>>>>>>> origin/master
 		  /* Resolve o sistema */
-		  if (resolversistema_DC()) {
+		  if (resolversistema()) {
 			return 1;
 		  }
 		#ifdef DEBUG
@@ -690,9 +783,9 @@ for (int indice=0; indice<=nv; indice++) {
 			}
 			else{
 				if(frequenciaHz)
-					gComplex = 2*PI*netlist[i].valor*J*frequencia;  //Para frequencia em Hz
+					gComplex = 2*PI*netlist[i].valor*J*frequencia_variavel;  //Para frequencia_variavel em Hz
 				else
-					gComplex = netlist[i].valor*J*frequencia;  		//Para frequencia em Rad/s
+					gComplex = netlist[i].valor*J*frequencia_variavel;  		//Para frequencia_variavel em Rad/s
 				YnComplex[netlist[i].a][netlist[i].a]+=gComplex;
 				YnComplex[netlist[i].b][netlist[i].b]+=gComplex;
 				YnComplex[netlist[i].a][netlist[i].b]-=gComplex;
@@ -709,9 +802,15 @@ for (int indice=0; indice<=nv; indice++) {
 				Yn[netlist[i].x][netlist[i].x]+= g;
 			}else{
 				if(frequenciaHz)
+<<<<<<< HEAD
+					gComplex = 0.0  - J * (2 * PI * netlist[i].valor * frequencia_variavel);			//Para frequencia_variavel em Hz	    (REVISAR)
+				else 
+					gComplex = 0.0 - J * (frequencia_variavel * netlist[i].valor);					//Para frequencia_variavel em Rad/s
+=======
 					gComplex = 0.0  - J * (2 * PI * netlist[i].valor * frequencia);			//Para frequencia em Hz	    (REVISAR)
 				else
 					gComplex = 0.0 - J * (frequencia * netlist[i].valor);					//Para frequencia em Rad/s
+>>>>>>> origin/master
 				YnComplex[netlist[i].a][netlist[i].x]+=1;
 				YnComplex[netlist[i].b][netlist[i].x]-=1;
 				YnComplex[netlist[i].x][netlist[i].a]-=1;
@@ -760,9 +859,15 @@ for (int indice=0; indice<=nv; indice++) {
 				Yn[netlist[i].x][netlist[i].a]-=1;
 				Yn[netlist[i].x][netlist[i].b]+=1;
 				YnComplex[netlist[i].x][nv+1]-=gComplex;
+<<<<<<< HEAD
+			}  
+		}
+		else if (tipo=='E') {										//Monta estampa para a FONTE DE TENSAO CONTROLADA A TENSAO, dependendo do flagDC monta estampa DC ou AC.
+=======
 			}
 		}
 		else if (tipo=='E') {
+>>>>>>> origin/master
 		  if(flagDC){
 				g=netlist[i].valor;
 				Yn[netlist[i].a][netlist[i].x]+=1;
@@ -933,3 +1038,9 @@ for (int indice=0; indice<=nv; indice++) {
 	}
 	  getch();
 }
+<<<<<<< HEAD
+
+
+
+=======
+>>>>>>> origin/master
