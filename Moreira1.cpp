@@ -1,19 +1,19 @@
-/* Análise nodal modificada de:
--  Ponto de Operação
--  Análise no Estado Permanente
+/* AnÃ¡lise nodal modificada de:
+-  Ponto de OperaÃ§Ã£o
+-  AnÃ¡lise no Estado Permanente
 Elementos aceitos:
-Resistor: R<nome> <nó +> <nó -> <Resistência>
-Indutor: L<nome> <nó +> <nó -> <Indutância>
-Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores já declarados.)
-Capacitor: C<nome> <nó +> <nó -> <Capacitância>
-Fonte de tensão controlada a tensão: E<nome> <nó V+> <nó V-> <nó v+> <nó v-> <Av>
-Fonte de corrente controlada a corrente: F<nome> <nó I+> <nó I-> <nó i+> <nó i-> <Ai>
-Fonte de corrente controlada a tensão: G<nome> <nó I+> <nó I-> <nó v+> <nó v-> <Gm>
-Fonte de tensão controlada a corrente: H<nome> <nó V+> <nó V-> <nó i+> <nó i-> <Rm>
-Fonte de corrente: I<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
-Fonte de tensão: V<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
-Amplificador operacional ideal: O<nome> <nó saída +> <nó saída -> <nó entrada +> <nó entrada ->
-Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
+Resistor: R<nome> <nÃ³ +> <nÃ³ -> <ResistÃªncia>
+Indutor: L<nome> <nÃ³ +> <nÃ³ -> <IndutÃ¢ncia>
+Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores jÃ¡ declarados.)
+Capacitor: C<nome> <nÃ³ +> <nÃ³ -> <CapacitÃ¢ncia>
+Fonte de tensÃ£o controlada a tensÃ£o: E<nome> <nÃ³ V+> <nÃ³ V-> <nÃ³ v+> <nÃ³ v-> <Av>
+Fonte de corrente controlada a corrente: F<nome> <nÃ³ I+> <nÃ³ I-> <nÃ³ i+> <nÃ³ i-> <Ai>
+Fonte de corrente controlada a tensÃ£o: G<nome> <nÃ³ I+> <nÃ³ I-> <nÃ³ v+> <nÃ³ v-> <Gm>
+Fonte de tensÃ£o controlada a corrente: H<nome> <nÃ³ V+> <nÃ³ V-> <nÃ³ i+> <nÃ³ i-> <Rm>
+Fonte de corrente: I<nome> <nÃ³ +> <nÃ³ -> <mÃ³dulo> <fase (graus)> <valor contÃ­nuo>
+Fonte de tensÃ£o: V<nome> <nÃ³ +> <nÃ³ -> <mÃ³dulo> <fase (graus)> <valor contÃ­nuo>
+Amplificador operacional ideal: O<nome> <nÃ³ saÃ­da +> <nÃ³ saÃ­da -> <nÃ³ entrada +> <nÃ³ entrada ->
+Transistor MOS: M<nome> <nÃ³ drain> <nÃ³ gate> <nÃ³ source> <nÃ³ base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
 */
 
 /*
@@ -93,8 +93,8 @@ int
   nn, /* N?mero de N?s */
   i,j,k;
   
-int freqInicialHz = 1;		 // default de frequencia inicial para análise de pequenos sinais
-int freqFinalHz = 10000;	// default de frequencia final para análise de pequenos sinais
+int freqInicialHz = 1;		 // default de frequencia inicial para anÃ¡lise de pequenos sinais
+int freqFinalHz = 10000;	// default de frequencia final para anÃ¡lise de pequenos sinais
 int ptsFreq = 1000;			// default para quantidade de pontos obtidos entre limites de frequencia_variavel
 
 
@@ -152,12 +152,8 @@ double
 
    
  void calculoCapacitanciasParasitas(elemento netlist[]);
-<<<<<<< HEAD
-
-=======
  void montarEstampa();
  int achaIndutor(char *nomeElemento);
->>>>>>> master
 
 inline double sinDouble (double angulo)
  {
@@ -332,7 +328,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			if (fabs(vProximo[counter_var]) > REF_VAL)
  				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
 
- 			//tmp_err = discrepância absoluta
+ 			//tmp_err = discrepÃ¢ncia absoluta
 
  			if (vProximo[counter_var] < REF_VAL)
  				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
@@ -347,7 +343,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			vAtual[counter_var] = vProximo[counter_var];
 
 
- 		//exibe o erro atual entre o nó atual e o nó futuro
+ 		//exibe o erro atual entre o nÃ³ atual e o nÃ³ futuro
 
  		printf("\nErro atual: %.10f\n", max_err);
 
@@ -363,7 +359,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			count_NOT_conv++;
 
 
- 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
+ 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e sÃ£o zerados os contadores para iteracoes
 
  		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
  		{
@@ -395,245 +391,9 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  		return;
  	}
  }
-<<<<<<< HEAD
  
-  void montarEstampa(double frequencia_variavel){
-=======
-
-int main(void)
-{
-  system ("cls");
-  printf("Analise nodal modificada\n");
- denovo:
-  /* ############################## Leitura do NETLIST ############################## */
-  ne=0; nv=0; strcpy(lista[0],"0");
-  printf("Nome do arquivo com o netlist (ex: mna.net): ");
-  scanf("%50s",nomearquivo);
-  arquivo=fopen(nomearquivo,"r");
-  if (arquivo==0) {
-    printf("Arquivo %s inexistente\n",nomearquivo);
-    goto denovo;
-  }
-
-  printf("Lendo netlist:\n");
-  fgets(txt,MAX_LINHA,arquivo);
-  printf("Titulo: %s",txt);
-  while (fgets(txt,MAX_LINHA,arquivo)) {
-    ne++; /* Nao usa o netlist[0] */
-    if (ne>MAX_ELEM) {
-      printf("O programa so aceita ate %d elementos\n",MAX_ELEM);
-      exit(1);
-    }
-    txt[0]=toupper(txt[0]);
-    tipo=txt[0];
-    sscanf(txt,"%10s",netlist[ne].nome);
-    p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
-    /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='L' || tipo=='C') {
-      sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
-      printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
-      netlist[ne].a=numero(na);
-      netlist[ne].b=numero(nb);
-    }
-    else if (tipo == 'V' || tipo=='I' ){
-    sscanf(p,"%10s%10s%lg%lg%lg",na,nb,&netlist[ne].modulo,&netlist[ne].fase,&netlist[ne].valor);
-      printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
-      netlist[ne].a=numero(na);
-      netlist[ne].b=numero(nb);
-
-	}
-    else if (tipo=='K') {
-			 sscanf(p,"%10s%10s%lg",&netlist[ne].nomeLa,&netlist[ne].nomeLb,&netlist[ne].valor);
-			 printf("%s %s %s %g\n",netlist[ne].nome,netlist[ne].nomeLa,netlist[ne].nomeLb,netlist[ne].valor);
-
-      /*sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
-      printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
-
-      for(int count = 0; count < MAX_NOME; count++){
-    	netlist[ne].nomeA[count]=na[count];
-      	netlist[ne].nomeB[count]=nb[count];*/
-	}
-
-    else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
-      sscanf(p,"%10s%10s%10s%10s%lg",na,nb,nc,nd,&netlist[ne].valor);
-      printf("%s %s %s %s %s %g\n",netlist[ne].nome,na,nb,nc,nd,netlist[ne].valor);
-      netlist[ne].a=numero(na);
-      netlist[ne].b=numero(nb);
-      netlist[ne].c=numero(nc);
-      netlist[ne].d=numero(nd);
-    }
-    else if (tipo=='O') {
-      sscanf(p,"%10s%10s%10s%10s",na,nb,nc,nd);
-      printf("%s %s %s %s %s\n",netlist[ne].nome,na,nb,nc,nd);
-      netlist[ne].a=numero(na);
-      netlist[ne].b=numero(nb);
-      netlist[ne].c=numero(nc);
-      netlist[ne].d=numero(nd);
-    }
-	else if (tipo=='M'){
-	  sscanf (p, "%10s%10s%10s%10s%10s L=%lf W=%lf %lf%lf%lf%lf%lf%lf", ntD, ntG, ntS, ntB, ntTipo, &netlist[ne].L, &netlist[ne].W, &netlist[ne].K,
-	  																	&netlist[ne].VT, &netlist[ne].LAMBDA, &netlist[ne].GAMMA, &netlist[ne].THETA, &netlist[ne].LD);
-      printf("%s %s %s %s %s %s %.2e %.2e %.2e %.2e %.2e %.2e %.2e %.2e\n",netlist[ne].nome,ntD, ntG, ntS, ntB, ntTipo, netlist[ne].L, netlist[ne].W, netlist[ne].K,
-	  																	netlist[ne].VT, netlist[ne].LAMBDA, netlist[ne].GAMMA, netlist[ne].THETA, netlist[ne].LD);
-      netlist[ne].pnMOS = ((ntTipo[0] =='N')?nmos:pmos);
-      netlist[ne].tD=numero (ntD);
-      netlist[ne].tG=numero (ntG);
-      netlist[ne].tS=numero (ntS);
-      netlist[ne].tB=numero (ntB);
-      netlist[ne].operacaoTransistor = corte;
-      double t = (netlist[ne].pnMOS == nmos?0.05:0.02);
-      netlist[ne].ALPHA = 2* netlist[ne].K/t;
-      linear = false;
-	}
-    else if (tipo=='*') { /* Comentario comeca com "*" */
-      printf("Comentario: %s",txt);
-      ne--;
-    }
-    else {
-      printf("Elemento desconhecido: %s\n",txt);
-      getch();
-      exit(1);
-    }
-  }
-  fclose(arquivo);
-
-
-
-  /* Acrescenta variaveis de corrente acima dos nos, anotando no netlist */
-  nn=nv;
-  for (i=1; i<=ne; i++) {
-    tipo=netlist[i].nome[0];
-    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O' || tipo =='L') {
-      nv++;
-      if (nv>MAX_NOS) {
-        printf("As correntes extra excederam o numero de variaveis permitido (%d)\n",MAX_NOS);
-        exit(1);
-      }
-      strcpy(lista[nv],"j"); /* Tem espaco para mais dois caracteres */
-      strcat(lista[nv],netlist[i].nome);
-      netlist[i].x=nv;
-    }
-    else if (tipo=='H') {
-      nv=nv+2;
-      if (nv>MAX_NOS) {
-        printf("As correntes extra excederam o numero de variaveis permitido (%d)\n",MAX_NOS);
-        exit(1);
-      }
-      strcpy(lista[nv-1],"jx"); strcat(lista[nv-1],netlist[i].nome);
-      netlist[i].x=nv-1;
-      strcpy(lista[nv],"jy"); strcat(lista[nv],netlist[i].nome);
-      netlist[i].y=nv;
-    }
-  }
-  getch();
-  /* Lista tudo */
-  printf("Variaveis internas: \n");
-  for (i=0; i<=nv; i++)
-    printf("%d -> %s\n",i,lista[i]);
-  getch();
-  printf("Netlist interno final\n");
-  for (i=1; i<=ne; i++) {
-    tipo=netlist[i].nome[0];
-    if (tipo=='R' || tipo=='I' || tipo=='V') {
-      printf("%s %d %d %g\n",netlist[i].nome,netlist[i].a,netlist[i].b,netlist[i].valor);
-    }
-	else if(tipo == 'C'){
-		printf("%s %d %d %g\n","RC",netlist[i].a,netlist[i].b,netlist[i].valor * FATORDC);
-	}
-	else if(tipo == 'L'){
-		printf("%s %d %d %g\n","RL",netlist[i].a,netlist[i].b,netlist[i].valor / FATORDC);
-	}
-    else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
-      printf("%s %d %d %d %d %g\n",netlist[i].nome,netlist[i].a,netlist[i].b,netlist[i].c,netlist[i].d,netlist[i].valor);
-    }
-    else if (tipo=='O') {
-      printf("%s %d %d %d %d\n",netlist[i].nome,netlist[i].a,netlist[i].b,netlist[i].c,netlist[i].d);
-    }
-    if (tipo=='V' || tipo=='E' || tipo=='F' || tipo=='O')
-      printf("Corrente jx: %d\n",netlist[i].x);
-    else if (tipo=='H')
-      printf("Correntes jx e jy: %d, %d\n",netlist[i].x,netlist[i].y);
-  }
-  getch();
-
-	while(!convergiu){ //montar sistema nodal modificado
-
-for (int indice=0; indice<=nv; indice++) {
-      //inicializa os vetores utilizdos na analise de convergencia
-      for (int j=0; j<=nv+1; j++)
-      {
-        Yn[indice][j]=0;
-      }
-    }
-    int numMOS = 0;
-		montarEstampa();
-		#ifdef DEBUG
-			/* Opcional: Mostra o sistema apos a montagem da estampa */
-			printf("Sistema apos a estampa de %s\n",netlist[i].nome);
-			for (k=1; k<=nv; k++) {
-			  for (j=1; j<=nv+1; j++)
-				if (Yn[k][j]!=0) {
-					printf("%+3.1e ",Yn[k][j]);
-				}
-				else printf(" ........ ");
-			  printf("\n");
-			}
-			getch();
-		#endif
-
-		  /* Resolve o sistema */
-		  if (resolversistema_DC()) {
-			return 1;
-		  }
-		#ifdef DEBUG
-		  /* Opcional: Mostra o sistema resolvido */
-		  printf("Sistema resolvido:\n");
-		  for (i=1; i<=nv; i++) {
-			  for (j=1; j<=nv+1; j++){
-				if ((Yn[i][j] >= -1/FATORDC*1000) && (Yn[i][j] <= 1/FATORDC*1000)) {
-				  Yn[i][j] *= 0;
-				}
-				if (Yn[i][j]!=0) {
-					printf("%+3.1g ",Yn[i][j]);
-				}
-				else{
-					printf(" ... ");
-				}
-			  }
-			  printf("\n");
-		  }
-		  getch();
-		#endif
-	  /* Mostra solucao */
-	  printf("Solucao:\n");
-	  strcpy(txt,"Tensao");
-	  for (i=1; i<=nv; i++) {
-		if (i==nn+1) strcpy(txt,"Corrente");
-		printf("%s %s: %g\n",txt,lista[i],Yn[i][nv+1]);
-		vProximo[i] = Yn[i] [nv+1];
-	  }
-	  vezes++;
-	  //Caso nao linear, utilizar Newton-Raphson
-	  if(!linear){
-		  controleConvergencia(vAtual,vProximo,iteracoes);
-	  } else{
-		  convergiu = true;
-	  }
-
-	  for (int i = 1;i<ne;i++){
-		  tipo=netlist[i].nome[0];
-		  if(tipo == 'M'){
-			  printf("Gm = %e Gds= %e Gmb = %e\n",gm,gDS,gmB);
-			  printf("Cgs=%e Cgd= %e Cgb = %e\n",netlist[i].cgS,netlist[i].cgD,netlist[i].cgB);
-		  }
-	  }
-
-   }
-   return 0;
-}
-
  void montarEstampa(){
->>>>>>> master
+ 	
 	  /* Monta o sistema nodal modificado */
 	  printf("O circuito tem %d nos, %d variaveis e %d elementos\n",nn,nv,ne);
 	  getch();
@@ -1157,36 +917,6 @@ int main(void)
 							#endif
 		/* Resolve o sistema */
 		if (resolversistema_DC()) 
-
-
-	while(!convergiu){ //montar sistema nodal modificado
-
-for (int indice=0; indice<=nv; indice++) {
-      //inicializa os vetores utilizdos na analise de convergencia
-      for (int j=0; j<=nv+1; j++)
-      {
-        Yn[indice][j]=0;
-      }
-    }
-    int numMOS = 0;
-		montarEstampa(0);
-		#ifdef DEBUG
-			/* Opcional: Mostra o sistema apos a montagem da estampa */
-			printf("Sistema apos a estampa de %s\n",netlist[i].nome);
-			for (k=1; k<=nv; k++) {
-			  for (j=1; j<=nv+1; j++)
-				if (Yn[k][j]!=0) {
-					printf("%+3.1e ",Yn[k][j]);
-				}
-				else printf(" ........ ");
-			  printf("\n");
-			}
-			getch();
-		#endif
-
-		  /* Resolve o sistema */
-		  if (resolversistema_DC()) {
-
 			return 1;
 							#ifdef DEBUG
 							  /* Opcional: Mostra o sistema resolvido */
@@ -1236,7 +966,7 @@ for (int indice=0; indice<=nv; indice++) {
 	// inicio da analise de pequenos sinais  
 	if (convergiu)
 	{	
-		int limitador = 0;                            //limitar o numero de linhas na tabela que aparecer� na tela.
+		int limitador = 0;                            //limitar o numero de linhas na tabela que aparecerá na tela.
 		printf("f ");
 		for(int i = 0; i < nv + 1; i++ )
 			printf("%dm %df ",lista[i]);
@@ -1290,20 +1020,6 @@ for (int indice=0; indice<=nv; indice++) {
 	}
 	getch();
 	return 0;
-
-	  }
-
-	  for (int i = 1;i<ne;i++){
-		  tipo=netlist[i].nome[0];
-		  if(tipo == 'M'){
-			  printf("Gm = %e Gds= %e Gmb = %e\n",gm,gDS,gmB);
-			  printf("Cgs=%e Cgd= %e Cgb = %e\n",netlist[i].cgS,netlist[i].cgD,netlist[i].cgB);
-		  }
-	  }
-
-   }
-   return 0;
-
   }
 }
 
