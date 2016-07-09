@@ -613,181 +613,193 @@ for (int indice=0; indice<=nv; indice++) {
 	  int numMOS = 0;
 	  for (i=1; i<=ne; i++) {
 		tipo=netlist[i].nome[0];
-		if (tipo=='R') {
+		if (tipo=='R') {						//Monta estampa para o RESISTOR, dependendo do flagDC monta estampa DC ou AC.
 			if(flagDC){
-		  g=1/netlist[i].valor;
-		  Yn[netlist[i].a][netlist[i].a]+=g;
-		  Yn[netlist[i].b][netlist[i].b]+=g;
-		  Yn[netlist[i].a][netlist[i].b]-=g;
-		  Yn[netlist[i].b][netlist[i].a]-=g;
+			  g=1/netlist[i].valor;
+			  Yn[netlist[i].a][netlist[i].a]+=g;
+			  Yn[netlist[i].b][netlist[i].b]+=g;
+			  Yn[netlist[i].a][netlist[i].b]-=g;
+			  Yn[netlist[i].b][netlist[i].a]-=g;
+			}
+			else{
+				 gComplex = 1/(netlist[i].valor);
+				 YnComplex[netlist[i].a][netlist[i].a]+=gComplex;
+				 YnComplex[netlist[i].b][netlist[i].b]+=gComplex;
+				 YnComplex[netlist[i].a][netlist[i].b]-=gComplex;
+				 YnComplex[netlist[i].b][netlist[i].a]-=gComplex;		
+			}
 		}
-		else{
-		 gComplex = 1/(netlist[i].valor);
-		  YnComplex[netlist[i].a][netlist[i].a]+=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].b]+=gComplex;
-		  YnComplex[netlist[i].a][netlist[i].b]-=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].a]-=gComplex;		
-		 }
-		}
-		else if (tipo=='K') {
+		else if (tipo=='K') {					// MUDAR, NAO ENTENDI O QUE O VITOR FEZ DIREITO
 		  g=netlist[i].valor;
 		  
 		  for (int count1 = 1; count1 <= ne; count1++){
-			if (netlist[i].nomeA == netlist[count1].nome){
-				Yn[netlist[i].x][netlist[count1].a]+=g;
-				Yn[netlist[i].x][netlist[count1].b]-=g;
-				Yn[netlist[count1].x][netlist[i].x]-=g;
-				Yn[netlist[count1].x][netlist[i].x]+=g;
-				break;
+				if (netlist[i].nomeA == netlist[count1].nome){
+					Yn[netlist[i].x][netlist[count1].a]+=g;
+					Yn[netlist[i].x][netlist[count1].b]-=g;
+					Yn[netlist[count1].x][netlist[i].x]-=g;
+					Yn[netlist[count1].x][netlist[i].x]+=g;
+					break;
+				}
 			}
-		  }
 		  
-		for (int count2 = 1; count2 <= ne; count2++){
-			if (netlist[i].nomeB == netlist[count2].nome){
-				
-				Yn[netlist[i].x][netlist[count2].a]-=1;
-				Yn[netlist[i].x][netlist[count2].b]+=1;
-				Yn[netlist[count2].x][netlist[i].x]+=1;
-				Yn[netlist[count2].x][netlist[i].x]-=1;
-				break;
+			for (int count2 = 1; count2 <= ne; count2++){
+				if (netlist[i].nomeB == netlist[count2].nome){
+					
+					Yn[netlist[i].x][netlist[count2].a]-=1;
+					Yn[netlist[i].x][netlist[count2].b]+=1;
+					Yn[netlist[count2].x][netlist[i].x]+=1;
+					Yn[netlist[count2].x][netlist[i].x]-=1;
+					break;
+				}
 			}
-		  }
 
 		}
-		else if (tipo=='C'){ 
-		  if(flagDC){
-		  g=netlist[i].valor / FATORDC;
-		  Yn[netlist[i].a][netlist[i].a]+=g;
-		  Yn[netlist[i].b][netlist[i].b]+=g;
-		  Yn[netlist[i].a][netlist[i].b]-=g;
-		  Yn[netlist[i].b][netlist[i].a]-=g;
-		}
-		else{
-	 	  if(frequenciaHz)
-		    gComplex = 2*PI*netlist[i].valor*J*frequencia;  //Para frequencia em Hz
-		  else
-		    gComplex = netlist[i].valor*J*frequencia;  //Para frequencia em Rad
-		  YnComplex[netlist[i].a][netlist[i].a]+=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].b]+=gComplex;
-		  YnComplex[netlist[i].a][netlist[i].b]-=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].a]-=gComplex;
-		 }
-		}
-		else if (tipo=='L') {
-		  g=1/FATORDC;
-		 Yn[netlist[i].a][netlist[i].x]+=1;
-         Yn[netlist[i].b][netlist[i].x]-=1;
-         Yn[netlist[i].x][netlist[i].a]-=1;
-         Yn[netlist[i].x][netlist[i].b]+=1;
-         Yn[netlist[i].x][netlist[i].x]+= g;
-		}
-		else if (tipo=='G') {
+		else if (tipo=='C'){										//Monta estampa para o CAPACITOR, dependendo do flagDC monta estampa DC ou AC.
 			if(flagDC){
-		  g=netlist[i].valor;
-		  Yn[netlist[i].a][netlist[i].c]+=g;
-		  Yn[netlist[i].b][netlist[i].d]+=g;
-		  Yn[netlist[i].a][netlist[i].d]-=g;
-		  Yn[netlist[i].b][netlist[i].c]-=g;
-		}
-		else{
-		  gComplex=netlist[i].valor;
-		  YnComplex[netlist[i].a][netlist[i].c]+=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].d]+=gComplex;
-		  YnComplex[netlist[i].a][netlist[i].d]-=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].c]-=gComplex;
-		}
-	}
-		else if (tipo=='I') {
-			if(flagDC){
-		  g=netlist[i].valor;
-		  Yn[netlist[i].a][nv+1]-=g;
-		  Yn[netlist[i].b][nv+1]+=g;
-		}else{
-			gComplex = netlist[i].modulo * cosd(netlist[i].fase) + J*netlist[i].modulo * sind(netlist[i].fase);
-			YnComplex[netlist[i].a][nv+1]-=gComplex;
-			YnComplex[netlist[i].b][nv+1]+=gComplex;
+				g=netlist[i].valor / FATORDC;
+				Yn[netlist[i].a][netlist[i].a]+=g;
+				Yn[netlist[i].b][netlist[i].b]+=g;
+				Yn[netlist[i].a][netlist[i].b]-=g;
+				Yn[netlist[i].b][netlist[i].a]-=g;
+			}
+			else{
+				if(frequenciaHz)
+					gComplex = 2*PI*netlist[i].valor*J*frequencia;  //Para frequencia em Hz
+				else
+					gComplex = netlist[i].valor*J*frequencia;  		//Para frequencia em Rad/s
+				YnComplex[netlist[i].a][netlist[i].a]+=gComplex;
+				YnComplex[netlist[i].b][netlist[i].b]+=gComplex;
+				YnComplex[netlist[i].a][netlist[i].b]-=gComplex;
+				YnComplex[netlist[i].b][netlist[i].a]-=gComplex;
 			}
 		}
-		else if (tipo=='V') {
+		else if (tipo=='L') {
 			if(flagDC){
-		  Yn[netlist[i].a][netlist[i].x]+=1;
-		  Yn[netlist[i].b][netlist[i].x]-=1;
-		  Yn[netlist[i].x][netlist[i].a]-=1;
-		  Yn[netlist[i].x][netlist[i].b]+=1;
-		  Yn[netlist[i].x][nv+1]-=netlist[i].valor;
-		} else {
-		  gComplex = netlist[i].modulo * cosd(netlist[i].fase) + J*netlist[i].modulo * sind(netlist[i].fase);
-		  Yn[netlist[i].a][netlist[i].x]+=1;
-		  Yn[netlist[i].b][netlist[i].x]-=1;
-		  Yn[netlist[i].x][netlist[i].a]-=1;
-		  Yn[netlist[i].x][netlist[i].b]+=1;
-		  Yn[netlist[i].x][nv+1]-=gComplex;
-		}  
-	}
-		else if (tipo=='E') {
+				g=1/FATORDC;											//FATORDC = 10e8 portando para DC, condutancia muito pequena (curto)
+				Yn[netlist[i].a][netlist[i].x]+=1;
+				Yn[netlist[i].b][netlist[i].x]-=1;
+				Yn[netlist[i].x][netlist[i].a]-=1;
+				Yn[netlist[i].x][netlist[i].b]+=1;
+				Yn[netlist[i].x][netlist[i].x]+= g;
+			}else{
+				if(frequenciaHz)
+					gComplex = 0.0  - J * (2 * PI * netlist[i].valor * frequencia);			//Para frequencia em Hz	    (REVISAR)
+				else 
+					gComplex = 0.0 - J * (frequencia * netlist[i].valor);					//Para frequencia em Rad/s
+				YnComplex[netlist[i].a][netlist[i].x]+=1;
+				YnComplex[netlist[i].b][netlist[i].x]-=1;
+				YnComplex[netlist[i].x][netlist[i].a]-=1;
+				YnComplex[netlist[i].x][netlist[i].b]+=1;
+				YnComplex[netlist[i].x][netlist[i].x]+= gComplex;
+			}			
+		}
+		
+		else if (tipo=='G') {										//Monta estampa para a FONTE DE CORRENTE CONTROLADA A TENSAO, dependendo do flagDC monta estampa DC ou AC.
+			if(flagDC){
+				g=netlist[i].valor;
+				Yn[netlist[i].a][netlist[i].c]+=g;
+				Yn[netlist[i].b][netlist[i].d]+=g;
+				Yn[netlist[i].a][netlist[i].d]-=g;
+				Yn[netlist[i].b][netlist[i].c]-=g;
+			}else{
+				gComplex=netlist[i].valor;
+				YnComplex[netlist[i].a][netlist[i].c]+=gComplex;
+				YnComplex[netlist[i].b][netlist[i].d]+=gComplex;
+				YnComplex[netlist[i].a][netlist[i].d]-=gComplex;
+				YnComplex[netlist[i].b][netlist[i].c]-=gComplex;
+			}
+		}
+		else if (tipo=='I') {										//Monta estampa para a FONTE DE CORRENTE, dependendo do flagDC monta estampa DC ou AC.
+			if(flagDC){
+				g=netlist[i].valor;
+				Yn[netlist[i].a][nv+1]-=g;
+				Yn[netlist[i].b][nv+1]+=g;
+			}else{
+				gComplex = netlist[i].modulo * cosd(netlist[i].fase) + J*netlist[i].modulo * sind(netlist[i].fase);
+				YnComplex[netlist[i].a][nv+1]-=gComplex;
+				YnComplex[netlist[i].b][nv+1]+=gComplex;
+			}
+		}
+		else if (tipo=='V') {										//Monta estampa para a FONTE DE TENSAO, dependendo do flagDC monta estampa DC ou AC.
+			if(flagDC){
+				Yn[netlist[i].a][netlist[i].x]+=1;
+				Yn[netlist[i].b][netlist[i].x]-=1;
+				Yn[netlist[i].x][netlist[i].a]-=1;
+				Yn[netlist[i].x][netlist[i].b]+=1;
+				Yn[netlist[i].x][nv+1]-=netlist[i].valor;
+			}else {
+				gComplex = netlist[i].modulo * cosd(netlist[i].fase) + J*netlist[i].modulo * sind(netlist[i].fase);
+				Yn[netlist[i].a][netlist[i].x]+=1;
+				Yn[netlist[i].b][netlist[i].x]-=1;
+				Yn[netlist[i].x][netlist[i].a]-=1;
+				Yn[netlist[i].x][netlist[i].b]+=1;
+				YnComplex[netlist[i].x][nv+1]-=gComplex;
+			}  
+		}
+		else if (tipo=='E') {										//Monta estampa para a FONTE DE TENSAO CONTROLADA A TENSAO, dependendo do flagDC monta estampa DC ou AC.
 		  if(flagDC){
-		  g=netlist[i].valor;
-		  Yn[netlist[i].a][netlist[i].x]+=1;
-		  Yn[netlist[i].b][netlist[i].x]-=1;
-		  Yn[netlist[i].x][netlist[i].a]-=1;
-		  Yn[netlist[i].x][netlist[i].b]+=1;
-		  Yn[netlist[i].x][netlist[i].c]+=g;
-		  Yn[netlist[i].x][netlist[i].d]-=g;
-		  } else {
-		  gComplex=netlist[i].valor;
-		  YnComplex[netlist[i].a][netlist[i].x]+=1;
-		  YnComplex[netlist[i].b][netlist[i].x]-=1;
-		  YnComplex[netlist[i].x][netlist[i].a]-=1;
-		  YnComplex[netlist[i].x][netlist[i].b]+=1;
-		  YnComplex[netlist[i].x][netlist[i].c]+=gComplex;
-		  YnComplex[netlist[i].x][netlist[i].d]-=gComplex;	
-		  } 
+				g=netlist[i].valor;
+				Yn[netlist[i].a][netlist[i].x]+=1;
+				Yn[netlist[i].b][netlist[i].x]-=1;
+				Yn[netlist[i].x][netlist[i].a]-=1;
+				Yn[netlist[i].x][netlist[i].b]+=1;
+				Yn[netlist[i].x][netlist[i].c]+=g;
+				Yn[netlist[i].x][netlist[i].d]-=g;
+			} else {
+				gComplex=netlist[i].valor;
+				YnComplex[netlist[i].a][netlist[i].x]+=1;
+				YnComplex[netlist[i].b][netlist[i].x]-=1;
+				YnComplex[netlist[i].x][netlist[i].a]-=1;
+				YnComplex[netlist[i].x][netlist[i].b]+=1;
+				YnComplex[netlist[i].x][netlist[i].c]+=gComplex;
+				YnComplex[netlist[i].x][netlist[i].d]-=gComplex;	
+			}	 
 		}
-		else if (tipo=='F') {
+		else if (tipo=='F') {									//Monta estampa para a FONTE DE CORRENTE CONTROLADA A CORRENTE, dependendo do flagDC monta estampa DC ou AC.
 			if(flagDC){
-		  g=netlist[i].valor;
-		  Yn[netlist[i].a][netlist[i].x]+=g;
-		  Yn[netlist[i].b][netlist[i].x]-=g;
-		  Yn[netlist[i].c][netlist[i].x]+=1;
-		  Yn[netlist[i].d][netlist[i].x]-=1;
-		  Yn[netlist[i].x][netlist[i].c]-=1;
-		  Yn[netlist[i].x][netlist[i].d]+=1;
-		  }else {
-		  gComplex=netlist[i].valor;
-		  YnComplex[netlist[i].a][netlist[i].x]+=gComplex;
-		  YnComplex[netlist[i].b][netlist[i].x]-=gComplex;
-		  YnComplex[netlist[i].c][netlist[i].x]+=1;
-		  YnComplex[netlist[i].d][netlist[i].x]-=1;
-		  YnComplex[netlist[i].x][netlist[i].c]-=1;
-		  YnComplex[netlist[i].x][netlist[i].d]+=1;
-		  }
+				g=netlist[i].valor;
+				Yn[netlist[i].a][netlist[i].x]+=g;
+				Yn[netlist[i].b][netlist[i].x]-=g;
+				Yn[netlist[i].c][netlist[i].x]+=1;
+				Yn[netlist[i].d][netlist[i].x]-=1;
+				Yn[netlist[i].x][netlist[i].c]-=1;
+				Yn[netlist[i].x][netlist[i].d]+=1;
+			}else {
+				gComplex=netlist[i].valor;
+				YnComplex[netlist[i].a][netlist[i].x]+=gComplex;
+				YnComplex[netlist[i].b][netlist[i].x]-=gComplex;
+				YnComplex[netlist[i].c][netlist[i].x]+=1;
+				YnComplex[netlist[i].d][netlist[i].x]-=1;
+				YnComplex[netlist[i].x][netlist[i].c]-=1;
+				YnComplex[netlist[i].x][netlist[i].d]+=1;
+			}
 		}
-		else if (tipo=='H') {
-		  if(){
-		  g=netlist[i].valor;
-		  Yn[netlist[i].a][netlist[i].y]+=1;
-		  Yn[netlist[i].b][netlist[i].y]-=1;
-		  Yn[netlist[i].c][netlist[i].x]+=1;
-		  Yn[netlist[i].d][netlist[i].x]-=1;
-		  Yn[netlist[i].y][netlist[i].a]-=1;
-		  Yn[netlist[i].y][netlist[i].b]+=1;
-		  Yn[netlist[i].x][netlist[i].c]-=1;
-		  Yn[netlist[i].x][netlist[i].d]+=1;
-		  Yn[netlist[i].y][netlist[i].x]+=g;
-		}else{
-		gComplex=netlist[i].valor;
-		  YnComplex[netlist[i].a][netlist[i].y]+=1;
-		  YnComplex[netlist[i].b][netlist[i].y]-=1;
-		  YnComplex[netlist[i].c][netlist[i].x]+=1;
-		  YnComplex[netlist[i].d][netlist[i].x]-=1;
-		  YnComplex[netlist[i].y][netlist[i].a]-=1;
-		  YnComplex[netlist[i].y][netlist[i].b]+=1;
-		  YnComplex[netlist[i].x][netlist[i].c]-=1;
-		  YnComplex[netlist[i].x][netlist[i].d]+=1;
-		  YnComplex[netlist[i].y][netlist[i].x]+=gComplex;
+		else if (tipo=='H') {									//Monta estampa para a FONTE DE TENSAO CONTROLADA A CORRENTE, dependendo do flagDC monta estampa DC ou AC.
+		  if(flagDC){
+				g=netlist[i].valor;
+				Yn[netlist[i].a][netlist[i].y]+=1;
+				Yn[netlist[i].b][netlist[i].y]-=1;
+				Yn[netlist[i].c][netlist[i].x]+=1;
+				Yn[netlist[i].d][netlist[i].x]-=1;
+				Yn[netlist[i].y][netlist[i].a]-=1;
+				Yn[netlist[i].y][netlist[i].b]+=1;
+				Yn[netlist[i].x][netlist[i].c]-=1;
+				Yn[netlist[i].x][netlist[i].d]+=1;
+				Yn[netlist[i].y][netlist[i].x]+=g;
+			}else{
+				gComplex=netlist[i].valor;
+				YnComplex[netlist[i].a][netlist[i].y]+=1;
+				YnComplex[netlist[i].b][netlist[i].y]-=1;
+				YnComplex[netlist[i].c][netlist[i].x]+=1;
+				YnComplex[netlist[i].d][netlist[i].x]-=1;
+				YnComplex[netlist[i].y][netlist[i].a]-=1;
+				YnComplex[netlist[i].y][netlist[i].b]+=1;
+				YnComplex[netlist[i].x][netlist[i].c]-=1;
+				YnComplex[netlist[i].x][netlist[i].d]+=1;
+				YnComplex[netlist[i].y][netlist[i].x]+=gComplex;
+			}	
 		}
-		}
-		else if (tipo=='M'){
+		else if (tipo=='M'){									//Monta estampa para o TRANSISTOR PMOS OU NMOS, Por enquanto apenas DC.
 			int numMOS = 0;
 			g = ((double) 1.0) / FATORDC;
 			gm = 0;
@@ -892,8 +904,9 @@ for (int indice=0; indice<=nv; indice++) {
 		  Yn[netlist[i].x][netlist[i].c]+=1;
 		  Yn[netlist[i].x][netlist[i].d]-=1;
 		}
-	  }
-	  getch();
 	}
+	  getch();
+}
+
 
 
