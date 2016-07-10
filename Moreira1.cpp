@@ -72,8 +72,8 @@ enum tipoMOS{
 typedef struct elemento { /* Defini??o de Elemento */
   char nome[MAX_NOME];
   double valor,modulo,fase;
-  double cgB,cgS,cgD,gdS,gm,gmB;
-  int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos 
+  double cgB,cgS,cgD,gDS,gm,gmB;
+  int a,b,c,d,x,y,tD,tG,tS,tB;  // Nos dos elementos
 
   double L,W,K,VT,LAMBDA,GAMMA,THETA,LD, ALPHA;
   char nomeLa[MAX_NOME], nomeLb[MAX_NOME], NPMOS[MAX_NOME];
@@ -90,10 +90,11 @@ int
   nv, /* N?mero de Variaveis */
   nn, /* N?mero de N?s */
   i,j,k;
-  
-int freqInicialHz = 1;		 // default de frequencia inicial para anÃ¡lise de pequenos sinais
-int freqFinalHz = 10000;	// default de frequencia final para anÃ¡lise de pequenos sinais
-int ptsFreq = 1000;			// default para quantidade de pontos obtidos entre limites de frequencia_variavel
+
+char escala_frequencia[3] ;	// default para escolha de escala para frequencias
+int freqInicialHz;		 // default de frequencia inicial para anÃ¡lise de pequenos sinais
+int freqFinalHz;	// default de frequencia final para anÃ¡lise de pequenos sinais
+int ptsFreq;			// default para quantidade de pontos obtidos entre limites de frequencia_variavel
 
 
 char
@@ -107,8 +108,6 @@ char
   lista[MAX_NOS+1][MAX_NOME+2], /*Tem que caber jx antes do nome */
   txt[MAX_LINHA+1],
   *p;
-  
-char escala_frequencia[MAX_NOME] = "linear";	// default para escolha de escala para frequencias
 
 FILE *arquivo;
 FILE *tabelaFreq;
@@ -123,7 +122,7 @@ double
   gDS,   // // Variaveis para o transistor.
   gmB,  //
   iO,  //
-  frequencia_variavel,  
+  frequencia_variavel,
 
   Yn[MAX_NOS+1][MAX_NOS+2],
   vAtual[MAX_NOS+1],
@@ -132,7 +131,7 @@ double
   pontoOperacao operacaoTransistorAtual [MAX_NOS +1];
   pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
 
-  
+
   bool first_run = true;   // Primeira vez que roda a analise de pequenos sinais (escrever a primeira linha de informacoes da tabela)
   bool frequenciaHz = true; //Utiliza a frequencia_variavel em Hz por default
   bool linear = true;
@@ -149,12 +148,12 @@ double
 /* Resolucao de sistema de equacoes lineares.
    Metodo de Gauss-Jordan com condensacao pivotal */
 
-   
+
  void calculoCapacitanciasParasitas(elemento netlist[]);
  void montarEstampa(double);
  int procuraIndutorTransformador(char *nomeElemento);
- 
- 
+
+
 
 inline double sinDouble (double angulo)
  {
@@ -177,7 +176,7 @@ inline cosDouble (double angulo)
     else
 			return (coseno);
 }
-   
+
 
 //funcao usada para criar a estampa AC do transformador
 //funcionando
@@ -246,7 +245,7 @@ int resolversistema_DC(void)
       Yn[i][j]/= t;
       p=Yn[i][j];
       if (p!=0)  /* Evita operacoes com zero */
-        for (l=1; l<=nv; l++) {  
+        for (l=1; l<=nv; l++) {
 	  if (l!=i)
 	    Yn[l][j]-=Yn[l][i]*p;
         }
@@ -327,34 +326,34 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			//tmp_err = discrepância relativa
  			if (fabs(vProximo[counter_var]) > REF_VAL)
  				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
- 
+
  			//tmp_err = discrepância absoluta
  			if (vProximo[counter_var] < REF_VAL)
  				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
- 
+
  			//atuliza max_err caso tmp_err seja maior
  			if (tmp_err > max_err)
  				max_err = tmp_err;
          }
- 
+
  		//faz com o que as tensoes futuras sejam as atuais
  		for (int counter_var = 0; counter_var <= nv; counter_var++)
  			vAtual[counter_var] = vProximo[counter_var];
- 
+
  		//exibe o erro atual entre o nó atual e o nó futuro
  		printf("\nErro atual: %.10f\n", max_err);
- 		
+
  		// se convergir, mantem-se o modelo do transistor e incrementa-se o contador da quantidade de vezes que o algoritmo convergiu
  		if (max_err <= MAX_ERRO)
  		{
  			correct_model = true;
  			count_conv++;
  		}
- 		
+
  		// senao, incrementa-se o contador da quantidade de vezes que o algoritmo NAO convergiu
  		else if (max_err >= MAX_ERRO)
  			count_NOT_conv++;
- 		
+
  		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
  		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
  		{
@@ -362,34 +361,34 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			count_conv = 0;
  			iteracoes = 0;
  		}
- 
-		// caso "count_conv" supere MIN_ITER_CONV (quantidade minima de iteracoes de convergencias corretas), confirma-se que o modelo converge 
+
+		// caso "count_conv" supere MIN_ITER_CONV (quantidade minima de iteracoes de convergencias corretas), confirma-se que o modelo converge
  		if (count_conv >= MIN_ITER_CONV)
  		{
  			convergiu = true;
  			printf("Convergiu \n");
  		}
- 		
+
  		if (correct_model)
  			iteracoes++;
- 		
+
  		return;
  	}
- 	
+
  	// se "iteracoes" superar MAX_ITER (quantidade maxima de iteracoes que a funcao controleConvergencia pode realizar), assume-se modelo incorreto e zera-se os contadores de iteracao
  	else if (iteracoes >= MAX_ITER)
  	{
  		correct_model = false;
  		count_conv = 0;
  		iteracoes = 0;
- 		
+
  		return;
  	}
- 	 
+
  }
- 
+
  void montarEstampa(double frequencia_variavel){
- 	
+
 	  /* Monta o sistema nodal modificado */
 	  printf("O circuito tem %d nos, %d variaveis e %d elementos\n",nn,nv,ne);
 	  getch();
@@ -468,7 +467,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 			}else{
 				if(frequenciaHz)
 					gComplex = 0.0  - J * (2 * PI * netlist[i].valor * frequencia_variavel);			//Para frequencia_variavel em Hz	    (REVISAR)
-				else 
+				else
 					gComplex = 0.0 - J * (frequencia_variavel * netlist[i].valor);					//Para frequencia_variavel em Rad/s
 				YnComplex[netlist[i].a][netlist[i].x]+=1;
 				YnComplex[netlist[i].b][netlist[i].x]-=1;
@@ -518,7 +517,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 				Yn[netlist[i].x][netlist[i].a]-=1;
 				Yn[netlist[i].x][netlist[i].b]+=1;
 				YnComplex[netlist[i].x][nv+1]-=gComplex;
-			}  
+			}
 		}
 		else if (tipo=='E') {										//Monta estampa para a FONTE DE TENSAO CONTROLADA A TENSAO, dependendo do flagDC monta estampa DC ou AC.
 
@@ -674,12 +673,12 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 				doubleComplex gCGS = 0.0 + J * 0.0;
 				doubleComplex gCGD = 0.0 + J * 0.0;
 				doubleComplex gCGB = 0.0 + J * 0.0;
-				
+
 				if (frequenciaHz) {
-					gCgb = J * 2.0 * PI * netlist[i].cgB * frequencia_variavel;
-					gCgs = J * 2.0 * PI * netlist[i].cgS * frequencia_variavel;
-					gCgd = J * 2.0 * PI * netlist[i].cgD * frequencia_variavel;
-					
+					gCGB = J * 2.0 * PI * netlist[i].cgB * frequencia_variavel;
+					gCGB = J * 2.0 * PI * netlist[i].cgS * frequencia_variavel;
+					gCGD = J * 2.0 * PI * netlist[i].cgD * frequencia_variavel;
+
 				}
 				else {
 					gCGB = J * netlist[i].cgB * frequencia_variavel;
@@ -741,12 +740,12 @@ void calculoCapacitanciasParasitas(elemento netlist[])
 	if(netlist[i].operacaoTransistor == corte){
 		netlist[i].cgB = netlist[i].ALPHA * netlist[i].W * netlist[i].L;
 		netlist[i].cgS = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
-		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;	
+		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
 	}
 	else if (netlist[i].operacaoTransistor == triodo){
 		netlist[i].cgB = 0;
 		netlist[i].cgS = (1.0/2 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);
-		netlist[i].cgD = (1.0/2 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);		
+		netlist[i].cgD = (1.0/2 * netlist[i].ALPHA * netlist[i].W * netlist[i].L) + (netlist[i].ALPHA * netlist[i].W * netlist[i].LD);
 	}
 	else{
 		netlist[i].cgB = 0;
@@ -754,18 +753,18 @@ void calculoCapacitanciasParasitas(elemento netlist[])
 		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
 	}
  }
- 
+
 void escreverTabelaFreq ()
 {
     char temp_char[MAX_LINHA+1];
-   
+
     // substitui em uma string auxiliar o nome do arquivo de ".net" para ".tab"
     if (first_run) {
         strcpy (temp_char,nomearquivo);
         *strstr(temp_char,".net") = '\0';
-        strcat (temp_char,".tab"); 
+        strcat (temp_char,".tab");
     }
-       
+
     // ao iniciar a analise de pequenos sinais, cria-se o arquivo de tabela e coloca-se na 1a linha os nomes das colunas da tabela
     if (first_run) {
         tabelaFreq = fopen (temp_char,"w");
@@ -815,7 +814,17 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='L' || tipo=='C') {
+		if(tipo=='.'){
+			  flagDC = false;
+				sscanf(p,"%10s%d%d%d",&escala_frequencia, &ptsFreq, &freqInicialHz, &freqFinalHz);
+				printf("Analise AC\n");
+				printf("Modo : %s\n", escala_frequencia);
+				printf("Pontos : %d\n", ptsFreq);
+				printf("Frequencia Inicial: %d\n", freqInicialHz);
+				printf("Frequencia Final: %d\n", freqFinalHz);
+				printf("\n");
+		}
+    else if (tipo=='R' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
@@ -933,22 +942,22 @@ int main(void)
       printf("Correntes jx e jy: %d, %d\n",netlist[i].x,netlist[i].y);
 }
   getch();
-  	
-		
+
+
 	for(int indice = 0; indice < MAX_NOS; indice ++)
 	{
 		vAtual[indice] = 0.1;
 		vProximo[indice] = 0;
 	}
-		
+
     int numMOS = 0;
-	
-	while(!convergiu){ // montar sistema nodal modificado -- MODIFIQUEI!!! (ESTAVA ANTES DO FOR QUE INICIALIZA Yn)	
-		
+
+	while(!convergiu){ // montar sistema nodal modificado -- MODIFIQUEI!!! (ESTAVA ANTES DO FOR QUE INICIALIZA Yn)
+
 		for (int indice=0; indice<=nv; indice++) {  //inicializa os vetores utilizados na analise de convergencia
 			for (int j=0; j<=nv+1; j++)
 				Yn[indice][j]=0;
-			
+
 		montarEstampa(0);
 							#ifdef DEBUG
 								/* Opcional: Mostra o sistema apos a montagem da estampa */
@@ -964,7 +973,7 @@ int main(void)
 								getch();
 							#endif
 		/* Resolve o sistema */
-		if (resolversistema_DC()) 
+		if (resolversistema_DC())
 			return 1;
 							#ifdef DEBUG
 							  /* Opcional: Mostra o sistema resolvido */
@@ -1001,7 +1010,7 @@ int main(void)
 		  convergiu = true;
 
 	}
-   
+
 	for (int i = 1; i < ne; i++){
 		tipo = netlist[i].nome[0];
 		if(tipo == 'M'){
@@ -1010,18 +1019,18 @@ int main(void)
 			calculoCapacitanciasParasitas(&netlist[i]);
 		}
 	}
-	  
-	// inicio da analise de pequenos sinais  
+
+	// inicio da analise de pequenos sinais
 	if (convergiu)
-	{	
+	{
 		int limitador = 0;                            //limitar o numero de linhas na tabela que aparecerá na tela.
 		printf("f ");
 		for(int i = 1; i < nv + 1; i++ )
 			printf("%dm %df ",lista[i]);
 		printf("\n");
-				
+
 		// escala linear
-		if ( !strcmp(escala_frequencia, "linear") ) {
+		if ( !strcmp(escala_frequencia, "LIN") ) {
 			double passo = (freqFinalHz - freqInicialHz) / (ptsFreq - 1);
 			for ( frequencia_variavel = freqInicialHz;  frequencia_variavel <= freqFinalHz; frequencia_variavel += passo) {
 				// resolucao do sistema AC
@@ -1039,7 +1048,7 @@ int main(void)
 			fclose(tabelaFreq);
 		}
 		// escala logaritmica
-		else if ( !strcmp(escala_frequencia, "logaritmica") ) {
+		else if ( !strcmp(escala_frequencia, "LOG") ) {
 			double passo = 1.0 / (ptsFreq - 1);
 			for ( frequencia_variavel = freqInicialHz;  frequencia_variavel <= freqFinalHz; frequencia_variavel *= pow(10, passo)) {
 				// resolucao do sistema AC
@@ -1056,7 +1065,7 @@ int main(void)
 			fclose(tabelaFreq);
 		}
 		// escala octal
-		else if ( !strcmp(escala_frequencia, "octal") ) {
+		else if ( !strcmp(escala_frequencia, "OCT") ) {
 			double passo = 1.0 / (ptsFreq - 1);
 			for ( frequencia_variavel = freqInicialHz;  frequencia_variavel <= freqFinalHz; frequencia_variavel *= pow(2, passo)) {
 				// resolucao do sistema AC
