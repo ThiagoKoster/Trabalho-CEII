@@ -1,19 +1,19 @@
-/* AnÃ¡lise nodal modificada de:
--  Ponto de OperaÃ§Ã£o
--  AnÃ¡lise no Estado Permanente
+/* Análise nodal modificada de:
+-  Ponto de Operação
+-  Análise no Estado Permanente
 Elementos aceitos:
-Resistor: R<nome> <nÃ³ +> <nÃ³ -> <ResistÃªncia>
-Indutor: L<nome> <nÃ³ +> <nÃ³ -> <IndutÃ¢ncia>
-Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores jÃ¡ declarados.)
-Capacitor: C<nome> <nÃ³ +> <nÃ³ -> <CapacitÃ¢ncia>
-Fonte de tensÃ£o controlada a tensÃ£o: E<nome> <nÃ³ V+> <nÃ³ V-> <nÃ³ v+> <nÃ³ v-> <Av>
-Fonte de corrente controlada a corrente: F<nome> <nÃ³ I+> <nÃ³ I-> <nÃ³ i+> <nÃ³ i-> <Ai>
-Fonte de corrente controlada a tensÃ£o: G<nome> <nÃ³ I+> <nÃ³ I-> <nÃ³ v+> <nÃ³ v-> <Gm>
-Fonte de tensÃ£o controlada a corrente: H<nome> <nÃ³ V+> <nÃ³ V-> <nÃ³ i+> <nÃ³ i-> <Rm>
-Fonte de corrente: I<nome> <nÃ³ +> <nÃ³ -> <mÃ³dulo> <fase (graus)> <valor contÃ­nuo>
-Fonte de tensÃ£o: V<nome> <nÃ³ +> <nÃ³ -> <mÃ³dulo> <fase (graus)> <valor contÃ­nuo>
-Amplificador operacional ideal: O<nome> <nÃ³ saÃ­da +> <nÃ³ saÃ­da -> <nÃ³ entrada +> <nÃ³ entrada ->
-Transistor MOS: M<nome> <nÃ³ drain> <nÃ³ gate> <nÃ³ source> <nÃ³ base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
+Resistor: R<nome> <nó +> <nó -> <Resistência>
+Indutor: L<nome> <nó +> <nó -> <Indutância>
+Acoplamento entre indutores: K<nome> <La> <Lb> <k> (La e Lb nomes de indutores já declarados.)
+Capacitor: C<nome> <nó +> <nó -> <Capacitância>
+Fonte de tensão controlada a tensão: E<nome> <nó V+> <nó V-> <nó v+> <nó v-> <Av>
+Fonte de corrente controlada a corrente: F<nome> <nó I+> <nó I-> <nó i+> <nó i-> <Ai>
+Fonte de corrente controlada a tensão: G<nome> <nó I+> <nó I-> <nó v+> <nó v-> <Gm>
+Fonte de tensão controlada a corrente: H<nome> <nó V+> <nó V-> <nó i+> <nó i-> <Rm>
+Fonte de corrente: I<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
+Fonte de tensão: V<nome> <nó +> <nó -> <módulo> <fase (graus)> <valor contínuo>
+Amplificador operacional ideal: O<nome> <nó saída +> <nó saída -> <nó entrada +> <nó entrada ->
+Transistor MOS: M<nome> <nó drain> <nó gate> <nó source> <nó base> <NMOS ou PMOS> L=<comprimento> W=<largura> <K> <Vt 0> <lambda> <gamma> <theta> <Ld>
 */
 
 /*
@@ -29,14 +29,12 @@ Transistor MOS: M<nome> <nÃ³ drain> <nÃ³ gate> <nÃ³ source> <nÃ³ base> <
 
 #include <stdio.h>
 #include <conio.h>
-#include <string>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 #include <complex>
 #include <iostream>
-#include <fstream>
 
 
 
@@ -93,8 +91,8 @@ int
   nn, /* N?mero de N?s */
   i,j,k;
   
-int freqInicialHz = 1;		 // default de frequencia inicial para anÃ¡lise de pequenos sinais
-int freqFinalHz = 10000;	// default de frequencia final para anÃ¡lise de pequenos sinais
+int freqInicialHz = 1;		 // default de frequencia inicial para análise de pequenos sinais
+int freqFinalHz = 10000;	// default de frequencia final para análise de pequenos sinais
 int ptsFreq = 1000;			// default para quantidade de pontos obtidos entre limites de frequencia_variavel
 
 
@@ -113,6 +111,7 @@ char
 char escala_frequencia[MAX_NOME] = "linear";	// default para escolha de escala para frequencias
 
 FILE *arquivo;
+FILE *tabelaFreq;
 
 
 doubleComplex gComplex;
@@ -134,7 +133,7 @@ double
   pontoOperacao operacaoTransistorProximo [MAX_NOS +1];
 
   
-  
+  bool first_run = true;   // Primeira vez que roda a analise de pequenos sinais (escrever a primeira linha de informacoes da tabela)
   bool frequenciaHz = true; //Utiliza a frequencia_variavel em Hz por default
   bool linear = true;
   bool correct_model = true;
@@ -152,8 +151,10 @@ double
 
    
  void calculoCapacitanciasParasitas(elemento netlist[]);
- void montarEstampa();
+ void montarEstampa(double);
  int achaIndutor(char *nomeElemento);
+ 
+ 
 
 inline double sinDouble (double angulo)
  {
@@ -218,23 +219,23 @@ int procuraIndutorTransformador(char nomeElemento[])
 
 int resolversistema_DC(void)
 {
-  int i,j,l,a;
-  double t,p;
+  int i,j,l, a;
+  double t, p;
 
-  for (i = 1; i <= nv; i++) {
-    t = 0.0;
-    a = i;
-    for (l = i; l <= nv; l++)
-      if (fabs(Yn[l][i]) > fabs(t)) {
-		a = l;
-		t = Yn[l][i];
+  for (i=1; i<=nv; i++) {
+    t=0.0;
+    a=i;
+    for (l=i; l<=nv; l++) {
+      if (fabs(Yn[l][i])>fabs(t)) {
+	a=l;
+	t=Yn[l][i];
       }
-    if (i != a)
-      for (l = 1; l <= nv+1; l++) {
-		p = Yn[i][l];
-		Yn[i][l] = Yn[a][l];
-		Yn[a][l] = p;
-
+    }
+    if (i!=a) {
+      for (l=1; l<=nv+1; l++) {
+	p=Yn[i][l];
+	Yn[i][l]=Yn[a][l];
+	Yn[a][l]=p;
       }
     }
     if (fabs(t)<TOLG) {
@@ -249,9 +250,8 @@ int resolversistema_DC(void)
 	  if (l!=i)
 	    Yn[l][j]-=Yn[l][i]*p;
         }
-
     }
-  
+  }
   return 0;
 }
 
@@ -315,8 +315,84 @@ int numero(char *nome)
 }
 
 
-
 void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
+{
+
+	double max_err = 0;
+ 	double tmp_err;
+ 	if (iteracoes < MAX_ITER)
+ 	{
+ 		for (int counter_var = 0; counter_var <= nv; counter_var++)
+ 		{
+ 			//tmp_err = discrep�ncia relativa
+ 			if (fabs(vProximo[counter_var]) > REF_VAL)
+ 				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
+ 
+ 			//tmp_err = discrep�ncia absoluta
+ 			if (vProximo[counter_var] < REF_VAL)
+ 				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
+ 
+ 			//atuliza max_err caso tmp_err seja maior
+ 			if (tmp_err > max_err)
+ 				max_err = tmp_err;
+         }
+ 
+ 		//faz com o que as tensoes futuras sejam as atuais
+ 		for (int counter_var = 0; counter_var <= nv; counter_var++)
+ 			vAtual[counter_var] = vProximo[counter_var];
+ 
+ 		//exibe o erro atual entre o n� atual e o n� futuro
+ 		printf("\nErro atual: %.10f\n", max_err);
+ 		
+ 		// se convergir, mantem-se o modelo do transistor e incrementa-se o contador da quantidade de vezes que o algoritmo convergiu
+ 		if (max_err <= MAX_ERRO)
+ 		{
+ 			correct_model = true;
+ 			count_conv++;
+ 		}
+ 		
+ 		// senao, incrementa-se o contador da quantidade de vezes que o algoritmo NAO convergiu
+ 		else if (max_err >= MAX_ERRO)
+ 			count_NOT_conv++;
+ 		
+ 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e s�o zerados os contadores para iteracoes
+ 		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
+ 		{
+ 			correct_model = false;
+ 			count_conv = 0;
+ 			iteracoes = 0;
+ 		}
+ 
+		// caso "count_conv" supere MIN_ITER_CONV (quantidade minima de iteracoes de convergencias corretas), confirma-se que o modelo converge 
+ 		if (count_conv >= MIN_ITER_CONV)
+ 		{
+ 			convergiu = true;
+ 			printf("Convergiu \n");
+ 		}
+ 		
+ 		if (correct_model)
+ 			iteracoes++;
+ 		
+ 		return;
+ 	}
+ 	
+ 	// se "iteracoes" superar MAX_ITER (quantidade maxima de iteracoes que a funcao controleConvergencia pode realizar), assume-se modelo incorreto e zera-se os contadores de iteracao
+ 	else if (iteracoes >= MAX_ITER)
+ 	{
+ 		correct_model = false;
+ 		count_conv = 0;
+ 		iteracoes = 0;
+ 		
+ 		return;
+ 	}
+ 	 
+ }
+
+
+
+
+
+/*void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 {
 
 	double max_err = 0;
@@ -328,7 +404,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			if (fabs(vProximo[counter_var]) > REF_VAL)
  				tmp_err = fabs( ( vProximo[counter_var] - vAtual[counter_var] ) / vProximo[counter_var]);
 
- 			//tmp_err = discrepÃ¢ncia absoluta
+ 			//tmp_err = discrepância absoluta
 
  			if (vProximo[counter_var] < REF_VAL)
  				tmp_err = fabs(vProximo[counter_var] - vAtual[counter_var]);
@@ -343,7 +419,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			vAtual[counter_var] = vProximo[counter_var];
 
 
- 		//exibe o erro atual entre o nÃ³ atual e o nÃ³ futuro
+ 		//exibe o erro atual entre o nó atual e o nó futuro
 
  		printf("\nErro atual: %.10f\n", max_err);
 
@@ -359,7 +435,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  			count_NOT_conv++;
 
 
- 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e sÃ£o zerados os contadores para iteracoes
+ 		// caso "count_NOT_conv" supere TRY_CONV (quantidade maxima de tentativas para convergencia), troca-se o modelo do transistor e são zerados os contadores para iteracoes
 
  		if ((max_err >= MAX_ERRO) && (count_NOT_conv >= TRY_CONV))
  		{
@@ -372,6 +448,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  		if (count_conv >= MIN_ITER_CONV)
  		{
  			convergiu = true;
+ 			flagDC = false;
  			printf("Convergiu \n");
  		}
 
@@ -390,9 +467,9 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 
  		return;
  	}
- }
+ } */
  
- void montarEstampa(){
+ void montarEstampa(double frequencia_variavel){
  	
 	  /* Monta o sistema nodal modificado */
 	  printf("O circuito tem %d nos, %d variaveis e %d elementos\n",nn,nv,ne);
@@ -438,8 +515,8 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
                 printf("valLa: %.6f valLb: %.6f\n", valLa, valLb);
 
                 double M = netlist[i].valor * sqrt(valLa * valLb);
-                YnComplex[indutorLa][indutorLb] += 0.0 + J*2.0*PI*frequencia*M;
-                YnComplex[indutorLb][indutorLa] += 0.0 + J*2.0*PI*frequencia*M;
+                YnComplex[indutorLa][indutorLb] += 0.0 + J*2.0*PI*frequencia_variavel*M;
+                YnComplex[indutorLb][indutorLa] += 0.0 + J*2.0*PI*frequencia_variavel*M;
 			}
 
 	/*	  for (int count1 = 1; count1 <= ne; count1++){   // O QUE O VITOR FEZ, APAGAR?!
@@ -483,7 +560,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 		}
 		else if (tipo=='L') {
 			if(flagDC){
-				g=1/FATORDC;											//FATORDC = 10e8 portando para DC, condutancia muito pequena (curto)
+				g=1/FATORDC;											//FATORDC = 10e8 portando para DC, condutancia muito pequeno (curto)
 				Yn[netlist[i].a][netlist[i].x]+=1;
 				Yn[netlist[i].b][netlist[i].x]-=1;
 				Yn[netlist[i].x][netlist[i].a]-=1;
@@ -720,7 +797,7 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
  
  
 
- void calculoCapacitanciasParasitas(elemento netlist[]){
+ /*void calculoCapacitanciasParasitas(elemento netlist[]){
 	if(netlist[i].operacaoTransistor == corte){
 		netlist[i].cgB = netlist[i].ALPHA * netlist[i].W * netlist[i].L;
 		netlist[i].cgS = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
@@ -737,8 +814,37 @@ void controleConvergencia ( double vAtual[], double vProximo[], int iteracoes)
 		netlist[i].cgD = netlist[i].ALPHA * netlist[i].W * netlist[i].LD;
 	}
  }
- 
-
+ */
+void escreverTabelaFreq ()
+{
+    char temp_char[MAX_LINHA+1];
+   
+    // substitui em uma string auxiliar o nome do arquivo de ".net" para ".tab"
+    if (first_run) {
+        strcpy (temp_char,nomearquivo);
+        *strstr(temp_char,".net") = '\0';
+        strcat (temp_char,".tab"); 
+    }
+       
+    // ao iniciar a analise de pequenos sinais, cria-se o arquivo de tabela e coloca-se na 1a linha os nomes das colunas da tabela
+    if (first_run) {
+        tabelaFreq = fopen (temp_char,"w");
+        fprintf(tabelaFreq,"f ");
+        for(int i = 1; i < nv + 1; i++)
+            fprintf(tabelaFreq, "%sm %sf ", lista[i], lista[i]);
+        fprintf(tabelaFreq, "\n");
+        first_run = false;
+    }
+    // escreve a frequencia atual e os valores de modulo/fase para as variaveis do sistema
+    else {
+        fprintf (tabelaFreq, "%e ", frequencia_variavel);
+        for(int i = 1; i < nv + 1; i++) {
+            fprintf(tabelaFreq, "%e ", abs(YnComplex[i][nv+1]));
+            fprintf(tabelaFreq, "%e ", ((180 / PI) * arg(YnComplex[i][nv+1])));
+        }
+        fprintf(tabelaFreq, "\n");
+    }
+}
 
 int main(void)
 {
@@ -769,13 +875,13 @@ int main(void)
     sscanf(txt,"%10s",netlist[ne].nome);
     p=txt+strlen(netlist[ne].nome); /* Inicio dos parametros */
     /* O que e lido depende do tipo */
-    if (tipo=='R' || tipo=='I' || tipo=='L' || tipo=='C') {
+    if (tipo=='R' || tipo=='L' || tipo=='C') {
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
       netlist[ne].b=numero(nb);
     }
-    else if (tipo == 'V'){
+    else if (tipo == 'V' || tipo=='I'){
     sscanf(p,"%10s%10s%lg%lg%lg",na,nb,&netlist[ne].modulo,&netlist[ne].fase,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
       netlist[ne].a=numero(na);
@@ -786,10 +892,10 @@ int main(void)
       sscanf(p,"%10s%10s%lg",na,nb,&netlist[ne].valor);
       printf("%s %s %s %g\n",netlist[ne].nome,na,nb,netlist[ne].valor);
 
-      for(int count = 0; count < MAX_NOME; count++){
-    	netlist[ne].nomeA[count]=na[count];
-      	netlist[ne].nomeB[count]=nb[count];
-	  }
+     //for(int count = 0; count < MAX_NOME; count++){
+      //	netlist[ne].nomeA[count]=na[count];
+     // 	netlist[ne].nomeB[count]=nb[count];
+	//  }
 
     }
     else if (tipo=='G' || tipo=='E' || tipo=='F' || tipo=='H') {
@@ -894,14 +1000,24 @@ int main(void)
 }
   getch();
   	
-	for (int indice=0; indice<=nv; indice++) {  //inicializa os vetores utilizdos na analise de convergencia
-		for (int j=0; j<=nv+1; j++)
-			Yn[indice][j]=0;
+		
+	for(int indice = 0; indice < MAX_NOS; indice ++)
+	{
+		vAtual[indice] = 0.1;
+		vProximo[indice] = 0;
+	}
 		
     int numMOS = 0;
 	
 	while(!convergiu){ // montar sistema nodal modificado -- MODIFIQUEI!!! (ESTAVA ANTES DO FOR QUE INICIALIZA Yn)
+		
+	for (int indice=0; indice<=nv; indice++) {  //inicializa os vetores utilizados na analise de convergencia
+		for (int j=0; j<=nv+1; j++)
+			Yn[indice][j]=0;
+		
 		montarEstampa(0);
+		
+
 							#ifdef DEBUG
 								/* Opcional: Mostra o sistema apos a montagem da estampa */
 								printf("Sistema apos a estampa de %s\n",netlist[i].nome);
@@ -959,18 +1075,18 @@ int main(void)
 		if(tipo == 'M'){
 			printf("Gm = %e Gds= %e Gmb = %e\n",gm,gDS,gmB);
 			printf("Cgs=%e Cgd= %e Cgb = %e\n",netlist[i].cgS,netlist[i].cgD,netlist[i].cgB);
-			calculoCapacitanciasParasitas(&netlist[i]);
+		//	calculoCapacitanciasParasitas(&netlist[i]);
 		}
 	}
 	  
 	// inicio da analise de pequenos sinais  
-	if (convergiu)
+	/*if (convergiu)
 	{	
-		int limitador = 0;                            //limitar o numero de linhas na tabela que aparecerá na tela.
+		int limitador = 0;                            //limitar o numero de linhas na tabela que aparecer� na tela.
 		printf("f ");
-		for(int i = 0; i < nv + 1; i++ )
+		for(int i = 1; i < nv + 1; i++ )
 			printf("%dm %df ",lista[i]);
-		printf("/n");
+		printf("\n");
 				
 		// escala linear
 		if ( !strcmp(escala_frequencia, "linear") ) {
@@ -980,12 +1096,15 @@ int main(void)
 				montarEstampa (frequencia_variavel);
 				resolversistema_AC();
 				if(limitador <= LIMITE_LINHAS){
-					printf("%e " ,frequencia_variavel);
-					for(int coluna = 0; coluna < nv + 1 ; coluna++)
-						printf("%e %e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
-					printf("/n");
+					printf("%.2e " ,frequencia_variavel);
+					for(int coluna = 1; coluna < nv + 1 ; coluna++)
+						printf("%.2e %.2e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
+					printf("\n");
 				}
+				limitador++;
+				escreverTabelaFreq();
 			}
+			fclose(tabelaFreq);
 		}
 		// escala logaritmica
 		else if ( !strcmp(escala_frequencia, "logaritmica") ) {
@@ -995,12 +1114,14 @@ int main(void)
 				montarEstampa (frequencia_variavel);
 				resolversistema_AC();
 				if(limitador <= LIMITE_LINHAS){
-					printf("%e " ,frequencia_variavel);
+					printf("%.2e " ,frequencia_variavel);
 					for(int coluna = 0; coluna < nv + 1 ; coluna++)
-						printf("%e %e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
+						printf("%.2e %.2e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
 					printf("/n");
 				}
+				escreverTabelaFreq();
 			}
+			fclose(tabelaFreq);
 		}
 		// escala octal
 		else if ( !strcmp(escala_frequencia, "octal") ) {
@@ -1010,18 +1131,21 @@ int main(void)
 				montarEstampa (frequencia_variavel);
 				resolversistema_AC();
 				if(limitador <= LIMITE_LINHAS){
-					printf("%e " ,frequencia_variavel);
+					printf("%.2e " ,frequencia_variavel);
 					for(int coluna = 0; coluna < nv + 1 ; coluna++)
-						printf("%e %e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
+						printf("%.2e %.2e ",abs(YnComplex[i][nv+1]), (180.0/ PI) * arg(YnComplex[i][nv+1]));
 					printf("/n");
 				}
+				escreverTabelaFreq();
 			}
+			fclose(tabelaFreq);
 		}
-	}
+	}*/
 	getch();
 	return 0;
   }
 }
+
 
 
 
